@@ -1,4 +1,13 @@
+
 # Rust CSR Web Frameworks
+
+# Table of Contents
+
+- [1. Yew](#1-yew)
+- [2. Sycamore](#2-sycamore)
+- [3. Dioxus](#3-dioxus)
+- [4. Leptos](#4-leptos)
+- [5. Differences](#differences)
 
 ## 1. Yew
 ### Strengths
@@ -233,3 +242,20 @@ Leptos is unique in that it is built around a reactive programming model. Instea
    ```sh
    trunk serve --open
    ```
+
+
+## Differences
+### 1. **Sycamore: Fine-grained Reactivity**
+- **Problem in Yew**: Yew uses a Virtual DOM (VDOM) architecture, which is not always the most efficient way to handle DOM updates. In a VDOM-based system, even small changes can require re-computation and diffing of the entire DOM tree, which can be less efficient for complex or highly dynamic UIs.
+- **What Sycamore Solves**: Sycamore introduces **fine-grained reactivity**—a system where only the parts of the UI that need updating are changed, without re-diffing the entire DOM. This is similar to frameworks like Solid.js in JavaScript, which avoid the performance overhead of a Virtual DOM. 
+- **Use Case**: When building applications that demand **very high performance** and real-time interactivity, such as dashboards, data visualizations, or games, Sycamore can offer more efficient updates than Yew.
+
+### 2. **Dioxus: Multi-platform Targeting**
+- **Problem in Yew**: Yew is primarily a **web-only** framework. It focuses entirely on web development, and while it does this well, it doesn’t cater to developers who want to write cross-platform applications (desktop, mobile, etc.) in Rust.
+- **What Dioxus Solves**: Dioxus aims to be a **multi-platform framework**. It allows you to use the same React-like component model to build apps that run not only in the browser (via WebAssembly) but also on **desktop** (via Tauri), **mobile** (via native bindings), and other platforms. This opens up Rust to developers looking for a "write once, run anywhere" experience similar to Flutter or React Native.
+- **Use Case**: For developers looking to build cross-platform applications in Rust, Dioxus is designed to target web, desktop, mobile, and even embedded environments, which Yew cannot do natively.
+
+### 3. **Leptos: Performance and Size Optimizations**
+- **Problem in Yew**: The Virtual DOM system in Yew adds a certain amount of overhead to the application in terms of **binary size** and **performance**. In environments where every kilobyte and millisecond counts (e.g., low-bandwidth networks or performance-critical UIs), this can be a disadvantage.
+- **What Leptos Solves**: Leptos, like Sycamore, uses **fine-grained reactivity** without a Virtual DOM. It is designed to be **lightweight** and **efficient**, reducing both the binary size and improving rendering performance by directly updating only the necessary parts of the DOM.
+- **Use Case**: When building applications that need to be **small** and **fast**—for example, applications where load times and data usage are critical (like in IoT devices or mobile web apps)—Leptos offers a more optimized solution than Yew.
