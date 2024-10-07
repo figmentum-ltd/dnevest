@@ -1,5 +1,7 @@
+mod gift;
 mod home;
-mod products;
+mod order;
 
+pub use gift::GiftPage;
 pub use home::HomePage;
-pub use products:: ProductsPage;
+pub use order::OrderPage;
