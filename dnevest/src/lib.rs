@@ -1,15 +1,19 @@
+use bindings::{ByteArray, Guest};
+
+
 #[allow(warnings)]
 #[rustfmt::skip]
 mod bindings;
 
-use bindings::Guest;
-
 struct Component;
 
 impl Guest for Component {
-    /// Say hello!
-    fn hello_world() -> String {
-        "Hello, World!".to_string()
+    fn execute(cmd: ByteArray) -> Result<Vec<ByteArray>, ()> {
+        todo!()
+    }
+
+    fn query(req: ByteArray) -> Vec<ByteArray> {
+        todo!()
     }
 }
 

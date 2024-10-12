@@ -1,6 +1,14 @@
 package component:dnevest;
 
-/// An example world for the component to target.
 world example {
-    export hello-world: func() -> string;
+    type byte-array = list<u8>;
+
+    // Host-provided functionality
+    import persist: func(key: string, req: byte-array);
+    import retrieve: func(key: string) -> option<byte-array>;
+    import retrieve-range: func(start: string, end: string) -> list<byte-array>;
+
+    // Component API
+    export execute: func(cmd: byte-array) -> result<list<byte-array>>;
+    export query: func(req: byte-array) -> list<byte-array>;
 }
