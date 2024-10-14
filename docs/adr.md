@@ -3,7 +3,7 @@
 ## ADR-001: Choice of Rendering
 
 **Date:** 2024-10-01  
-**Status:** Accepted
+**Status:** Accepted  
 **Decision:**  
 We will use client-side rendering. 
 
@@ -14,8 +14,8 @@ We will use client-side rendering.
 
 ## ADR-002: Frontend Framework Selection
 
-**Date:** 2024-10-08
-**Status:** Proposed    
+**Date:** 2024-10-08  
+**Status:** Proposed  
 **Decision:**  
 For the frontend we will use React or VueJS
 
@@ -40,9 +40,9 @@ We have chosen **JSON** as the standard format for the messages exchanged betwee
 
 ## ADR-004: Selecting newspapers from web
 
-**Date:** 2024-10-08
-**Status:** Accepted    
-**Decision:**  
+**Date:** 2024-10-08  
+**Status:** Accepted  
+**Decision:**   
 For the customer, the name and the signature of the newspapers will be visible and through them they will be able to select the newspapers.
 
 
