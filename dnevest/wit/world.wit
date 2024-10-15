@@ -2,6 +2,7 @@ package component:dnevest;
 
 world example {
     type byte-array = list<u8>;
+    type event = tuple<string, list<byte-array>>;
 
     // Host-provided functionality
     import persist: func(key: string, req: byte-array);
@@ -9,6 +10,6 @@ world example {
     import retrieve-range: func(start: string, end: string) -> list<byte-array>;
 
     // Component API
-    export execute: func(cmd: byte-array) -> result<list<byte-array>>;
+    export execute: func(cmd: byte-array) -> result<list<event>>;
     export query: func(req: byte-array) -> list<byte-array>;
 }

@@ -8,7 +8,7 @@ mod bindings;
 struct Component;
 
 impl Guest for Component {
-    fn execute(cmd: ByteArray) -> Result<Vec<ByteArray>, ()> {
+    fn execute(cmd: ByteArray) -> Result<Vec<bindings::Event>, ()> {
         todo!()
     }
 
