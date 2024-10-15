@@ -19,7 +19,10 @@ jobs:
 
     - name: Format
       working-directory: dnevest
-      run: cargo fmt
+      run: cargo fmt --check
+
+    - name: Install wasm32 target
+      run: rustup target add wasm32-unknown-unknown
     
     - name: Build
       working-directory: dnevest
