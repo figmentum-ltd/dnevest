@@ -12,7 +12,7 @@ impl Guest for Component {
         todo!()
     }
 
-    fn query(req: ByteArray) -> Vec<ByteArray> {
+    fn query(req: ByteArray) -> Result<Vec<ByteArray>, ()> {
         todo!()
     }
 }

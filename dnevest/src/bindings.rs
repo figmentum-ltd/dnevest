@@ -222,56 +222,73 @@ pub unsafe fn _export_query_cabi<T: Guest>(arg0: *mut u8, arg1: usize) -> *mut u
     let len0 = arg1;
     let result1 = T::query(_rt::Vec::from_raw_parts(arg0.cast(), len0, len0));
     let ptr2 = _RET_AREA.0.as_mut_ptr().cast::<u8>();
-    let vec4 = result1;
-    let len4 = vec4.len();
-    let layout4 = _rt::alloc::Layout::from_size_align_unchecked(vec4.len() * 8, 4);
-    let result4 = if layout4.size() != 0 {
-        let ptr = _rt::alloc::alloc(layout4).cast::<u8>();
-        if ptr.is_null() {
-            _rt::alloc::handle_alloc_error(layout4);
+    match result1 {
+        Ok(e) => {
+            *ptr2.add(0).cast::<u8>() = (0i32) as u8;
+            let vec4 = e;
+            let len4 = vec4.len();
+            let layout4 = _rt::alloc::Layout::from_size_align_unchecked(
+                vec4.len() * 8,
+                4,
+            );
+            let result4 = if layout4.size() != 0 {
+                let ptr = _rt::alloc::alloc(layout4).cast::<u8>();
+                if ptr.is_null() {
+                    _rt::alloc::handle_alloc_error(layout4);
+                }
+                ptr
+            } else {
+                { ::core::ptr::null_mut() }
+            };
+            for (i, e) in vec4.into_iter().enumerate() {
+                let base = result4.add(i * 8);
+                {
+                    let vec3 = (e).into_boxed_slice();
+                    let ptr3 = vec3.as_ptr().cast::<u8>();
+                    let len3 = vec3.len();
+                    ::core::mem::forget(vec3);
+                    *base.add(4).cast::<usize>() = len3;
+                    *base.add(0).cast::<*mut u8>() = ptr3.cast_mut();
+                }
+            }
+            *ptr2.add(8).cast::<usize>() = len4;
+            *ptr2.add(4).cast::<*mut u8>() = result4;
         }
-        ptr
-    } else {
-        { ::core::ptr::null_mut() }
+        Err(_) => {
+            *ptr2.add(0).cast::<u8>() = (1i32) as u8;
+        }
     };
-    for (i, e) in vec4.into_iter().enumerate() {
-        let base = result4.add(i * 8);
-        {
-            let vec3 = (e).into_boxed_slice();
-            let ptr3 = vec3.as_ptr().cast::<u8>();
-            let len3 = vec3.len();
-            ::core::mem::forget(vec3);
-            *base.add(4).cast::<usize>() = len3;
-            *base.add(0).cast::<*mut u8>() = ptr3.cast_mut();
-        }
-    }
-    *ptr2.add(4).cast::<usize>() = len4;
-    *ptr2.add(0).cast::<*mut u8>() = result4;
     ptr2
 }
 #[doc(hidden)]
 #[allow(non_snake_case)]
 pub unsafe fn __post_return_query<T: Guest>(arg0: *mut u8) {
-    let l0 = *arg0.add(0).cast::<*mut u8>();
-    let l1 = *arg0.add(4).cast::<usize>();
-    let base5 = l0;
-    let len5 = l1;
-    for i in 0..len5 {
-        let base = base5.add(i * 8);
-        {
-            let l2 = *base.add(0).cast::<*mut u8>();
-            let l3 = *base.add(4).cast::<usize>();
-            let base4 = l2;
-            let len4 = l3;
-            _rt::cabi_dealloc(base4, len4 * 1, 1);
+    let l0 = i32::from(*arg0.add(0).cast::<u8>());
+    match l0 {
+        0 => {
+            let l1 = *arg0.add(4).cast::<*mut u8>();
+            let l2 = *arg0.add(8).cast::<usize>();
+            let base6 = l1;
+            let len6 = l2;
+            for i in 0..len6 {
+                let base = base6.add(i * 8);
+                {
+                    let l3 = *base.add(0).cast::<*mut u8>();
+                    let l4 = *base.add(4).cast::<usize>();
+                    let base5 = l3;
+                    let len5 = l4;
+                    _rt::cabi_dealloc(base5, len5 * 1, 1);
+                }
+            }
+            _rt::cabi_dealloc(base6, len6 * 8, 4);
         }
+        _ => {}
     }
-    _rt::cabi_dealloc(base5, len5 * 8, 4);
 }
 pub trait Guest {
     /// Component API
     fn execute(cmd: ByteArray) -> Result<_rt::Vec<Event>, ()>;
-    fn query(req: ByteArray) -> _rt::Vec<ByteArray>;
+    fn query(req: ByteArray) -> Result<_rt::Vec<ByteArray>, ()>;
 }
 #[doc(hidden)]
 macro_rules! __export_world_example_cabi {
@@ -348,15 +365,16 @@ pub(crate) use __export_example_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[link_section = "component-type:wit-bindgen:0.30.0:example:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 339] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xd5\x01\x01A\x02\x01\
-A\x12\x01p}\x03\0\x0abyte-array\x03\0\0\x01p\x01\x01o\x02s\x02\x03\0\x05event\x03\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 344] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xda\x01\x01A\x02\x01\
+A\x13\x01p}\x03\0\x0abyte-array\x03\0\0\x01p\x01\x01o\x02s\x02\x03\0\x05event\x03\
 \0\x03\x01@\x02\x03keys\x03req\x01\x01\0\x03\0\x07persist\x01\x05\x01k\x01\x01@\x01\
 \x03keys\0\x06\x03\0\x08retrieve\x01\x07\x01@\x02\x05starts\x03ends\0\x02\x03\0\x0e\
 retrieve-range\x01\x08\x01p\x04\x01j\x01\x09\0\x01@\x01\x03cmd\x01\0\x0a\x04\0\x07\
-execute\x01\x0b\x01@\x01\x03req\x01\0\x02\x04\0\x05query\x01\x0c\x04\x01\x19comp\
-onent:dnevest/example\x04\0\x0b\x0d\x01\0\x07example\x03\0\0\0G\x09producers\x01\
-\x0cprocessed-by\x02\x0dwit-component\x070.215.0\x10wit-bindgen-rust\x060.30.0";
+execute\x01\x0b\x01j\x01\x02\0\x01@\x01\x03req\x01\0\x0c\x04\0\x05query\x01\x0d\x04\
+\x01\x19component:dnevest/example\x04\0\x0b\x0d\x01\0\x07example\x03\0\0\0G\x09p\
+roducers\x01\x0cprocessed-by\x02\x0dwit-component\x070.215.0\x10wit-bindgen-rust\
+\x060.30.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

@@ -11,5 +11,5 @@ world example {
 
     // Component API
     export execute: func(cmd: byte-array) -> result<list<event>>;
-    export query: func(req: byte-array) -> list<byte-array>;
+    export query: func(req: byte-array) -> result<list<byte-array>>;
 }
