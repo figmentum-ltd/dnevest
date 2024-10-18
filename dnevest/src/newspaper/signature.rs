@@ -1,6 +1,10 @@
+use once_cell::sync::Lazy;
 use regex::Regex;
 
 use super::error::{Error, Result};
+
+static REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^B\d{4}$").expect("Invalid regex pattern!"));
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub(super) struct Signature {
@@ -10,7 +14,7 @@ pub(super) struct Signature {
 impl Signature {
     pub(super) fn new(signature: String) -> Self {
         let obj = Self { signature };
-        debug_assert_eq!(Ok(()), obj.invariant_held());
+        debug_assert!(obj.invariant_held().is_ok());
         obj
     }
 
@@ -21,16 +25,11 @@ impl Signature {
     }
 
     fn invariant_held(&self) -> Result<()> {
-        let pattern = r"^B\d{4}$";
-        Regex::new(pattern)
-            .map_err(|_| Error::InvalidRegexPattern)
-            .and_then(|regex| {
-                if regex.is_match(&self.signature) {
-                    Ok(())
-                } else {
-                    Err(Error::SignatureMismatch)
-                }
-            })
+        if REGEX.is_match(&self.signature){
+            Ok(())
+        } else {
+            Err(Error::SignatureMismatch)
+        }
     }
 }
 

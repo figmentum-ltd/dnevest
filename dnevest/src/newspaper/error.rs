@@ -1,10 +1,7 @@
 use thiserror::Error;
 
-#[derive(Error, Debug, PartialEq)]
+#[derive(Error, Debug)]
 pub(crate) enum Error {
-    #[error("[Newspaper] Invalid regex pattern.")]
-    InvalidRegexPattern,
-
     #[error("[Newspaper] Signature does not match the required pattern.")]
     SignatureMismatch,
 }
