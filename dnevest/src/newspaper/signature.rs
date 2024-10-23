@@ -21,6 +21,11 @@ impl Signature {
         obj.invariant_held().map(|()| obj)
     }
 
+    #[cfg(test)]
+    pub(super) fn new(signature: &str) -> Self {
+        Self::new_internal(signature)
+    }
+
     fn new_internal(signature: &str) -> Self {
         Self {
             signature: signature.to_string(),
