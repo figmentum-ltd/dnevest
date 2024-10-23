@@ -2,7 +2,7 @@ package component:dnevest;
 
 world example {
     type byte-array = list<u8>;
-    type event = tuple<string, list<byte-array>>;
+    type event = tuple<string, byte-array>;
 
     // Host-provided functionality
     import persist: func(key: string, req: byte-array);
