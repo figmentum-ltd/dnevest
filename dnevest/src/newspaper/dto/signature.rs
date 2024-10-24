@@ -17,7 +17,7 @@ impl TryFrom<SignatureDTO> for Signature {
 
 impl From<Signature> for SignatureDTO {
     fn from(value: Signature) -> Self {
-        Self(value.signature())
+        Self(value.signature().to_string())
     }
 }
 
@@ -33,15 +33,14 @@ mod tests {
         let dto: SignatureDTO = signature.into();
         let serialized = serde_json::to_string(&dto).unwrap();
 
-        assert_eq!(serialized,  r#"В3452"#)
+        assert_eq!(serialized, r#"В3452"#)
     }
 
     #[test]
     fn deserialize() {
         let dto: SignatureDTO = serde_json::from_str(r#""В2749""#).unwrap();
         let signature = Signature::try_from(dto).unwrap();
-        
+
         assert_eq!(signature.signature(), "В2749")
     }
 }
-
