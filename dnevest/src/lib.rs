@@ -14,13 +14,13 @@ mod services;
 struct Component;
 
 impl Guest for Component {
-    fn execute(cmd: ByteArray) -> Result<Vec<bindings::Event>, ByteArray> {
+    fn execute(cmd: ByteArray) -> Result<bindings::Event, ByteArray> {
         msgs::deserialize_execute_msg(cmd).and_then(|msg| match msg {
             ExecuteMsg::CreateNewspaper { input } => services::create_newspaper(input),
         })
     }
 
-    fn query(req: ByteArray) -> Result<Vec<ByteArray>, ByteArray> {
+    fn query(req: ByteArray) -> Result<ByteArray, ByteArray> {
         msgs::deserialize_query_msg(req).and_then(|msg| match msg {
             QueryMsg::NewspapersByDate { date } => services::newspapers_by_date(date),
         })

@@ -1,16 +1,19 @@
 package component:dnevest;
 
 world example {
-    type byte-array = list<u8>;
-    // TODO! Event has to be created as struct
-    type event = tuple<string, byte-array>;
+    record event {
+        id: string,
+        content: byte-array,
+    }
 
+    type byte-array = list<u8>;
+    
     // Host-provided functionality
     import persist: func(key: string, req: byte-array);
     import retrieve: func(key: string) -> option<byte-array>;
     import retrieve-range: func(start: string, end: string) -> list<byte-array>;
 
     // Component API
-    export execute: func(cmd: byte-array) -> result<list<event>, byte-array>;
-    export query: func(req: byte-array) -> result<list<byte-array>, byte-array>;
+    export execute: func(cmd: byte-array) -> result<event, byte-array>;
+    export query: func(req: byte-array) -> result<byte-array, byte-array>;
 }

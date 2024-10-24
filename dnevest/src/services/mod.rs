@@ -3,7 +3,7 @@ use std::result::Result as StdResult;
 use chrono::Weekday;
 
 use crate::{
-    bindings::{self, ByteArray, Event as BindingsEvent},
+    bindings::{self, ByteArray},
     newspaper::{self, Date, DateDTO, Newspaper, NewspaperDTO},
     response::Event,
 };
@@ -12,7 +12,7 @@ mod error;
 
 pub(super) use error::Error as ServiceError;
 
-pub fn create_newspaper(input: NewspaperDTO) -> StdResult<Vec<BindingsEvent>, ByteArray> {
+pub fn create_newspaper(input: NewspaperDTO) -> StdResult<bindings::Event, ByteArray> {
     input
         .try_into()
         .map_err(|err| ServiceError::InvalidNewspaper(err))
@@ -20,7 +20,7 @@ pub fn create_newspaper(input: NewspaperDTO) -> StdResult<Vec<BindingsEvent>, By
         .or_else(|error| error::serialize_errors(vec![error]))
 }
 
-pub fn newspapers_by_date(date_dto: DateDTO) -> Result<Vec<ByteArray>, ByteArray> {
+pub fn newspapers_by_date(date_dto: DateDTO) -> Result<ByteArray, ByteArray> {
     // date_dto
     //     .try_into()
     //     .map_err(|err| ServiceError::InvalidDate(err))
@@ -38,7 +38,7 @@ pub fn newspapers_by_date(date_dto: DateDTO) -> Result<Vec<ByteArray>, ByteArray
 // })
 
 // TODO! - do we need 'newspaper' to pe present in every name
-fn new_newspaper(newspaper: Newspaper) -> StdResult<Vec<BindingsEvent>, ServiceError> {
+fn new_newspaper(newspaper: Newspaper) -> StdResult<bindings::Event, ServiceError> {
     // TODO! remove the cloning
     let obj = newspaper.clone();
     let signature = obj.signature_str();
@@ -50,7 +50,10 @@ fn new_newspaper(newspaper: Newspaper) -> StdResult<Vec<BindingsEvent>, ServiceE
     bindings::persist("dto.signature", &serialized_newspaper);
 
     let serialized_event = Event::NewspaperCreated(signature).serialize_event()?;
-    Ok(vec![("dnevest_n_n".to_string(), serialized_event)])
+    Ok(bindings::Event {
+        id: "dnevest_n_n".to_string(),
+        content: serialized_event,
+    })
 }
 
 // fn find_newspapers(date: Date) -> Result<Vec<ByteArray>, ServiceError> {

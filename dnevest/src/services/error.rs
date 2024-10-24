@@ -1,7 +1,7 @@
 use std::result::Result as StdResult;
 use thiserror::Error;
 
-use crate::bindings::{ByteArray, Event};
+use crate::bindings::{self, ByteArray};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -15,11 +15,13 @@ pub enum Error {
     SerializationFault,
 }
 
-pub(super) fn serialize_errors(errors: Vec<Error>) -> StdResult<Vec<Event>, ByteArray> {
+pub(super) fn serialize_errors(errors: Vec<Error>) -> StdResult<bindings::Event, ByteArray> {
     let serialized_errors: Vec<String> = errors
         .into_iter()
         .map(|error| match error {
-            Error::InvalidNewspaper(err) => format!("Invalid newspaper due to invalid signature: {}", err),
+            Error::InvalidNewspaper(err) => {
+                format!("Invalid newspaper due to invalid signature: {}", err)
+            }
             Error::InvalidDate(err) => format!("Invalid date: {}", err),
             Error::SerializationFault => "Problem while serialization".to_string(),
         })
