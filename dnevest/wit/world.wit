@@ -2,6 +2,7 @@ package component:dnevest;
 
 world example {
     type byte-array = list<u8>;
+    // TODO! Event has to be created as struct
     type event = tuple<string, byte-array>;
 
     // Host-provided functionality

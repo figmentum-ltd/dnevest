@@ -1,11 +1,14 @@
 use serde::{Deserialize, Serialize};
 
+mod date;
 mod signature;
 
 use super::{error::Error, frequency::WeeklyFrequency, Newspaper};
 
-pub(super) use signature::SignatureDTO;
+pub(crate) use date::DateDTO;
+pub(crate) use signature::SignatureDTO;
 
+//TODO! - remove DTO-s
 #[derive(Serialize, Deserialize)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub(crate) struct NewspaperDTO {

@@ -1,19 +1,23 @@
 use chrono::{Datelike, NaiveDate, Weekday};
 use serde::Deserialize;
 
-use crate::bindings::ByteArray;
+use crate::{bindings::ByteArray, newspaper::dto};
 
 use super::error::{Error, Result};
 
 const FORMAT: &str = "%d-%m-%Y";
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
-pub(super) struct Date {
+#[derive(Deserialize, Clone)]
+#[serde(try_from = "dto::DateDTO")]
+pub(crate) struct Date {
     date: NaiveDate,
 }
 
 impl Date {
-    pub(crate) fn parse_from_json(json_data: ByteArray) -> Result<Self> {
+    /// Method for deserializing the Date type
+    #[cfg(test)]
+    pub(super) fn parse_from_json(json_data: ByteArray) -> Result<Self> {
         #[derive(Deserialize)]
         struct DateInput {
             date: String,
@@ -24,22 +28,37 @@ impl Date {
             .and_then(|date_input| {
                 NaiveDate::parse_from_str(&date_input.date, FORMAT)
                     .map_err(|err| Error::DateParsing(err))
-                    .map(|date| Date::new(date))
+                    .map(|date| Date::new_internal(date))
             })
+    }
+
+    pub(super) fn try_new(date: &str) -> Result<Self> {
+        NaiveDate::parse_from_str(&date, FORMAT)
+            .map_err(|err| Error::DateParsing(err))
+            .map(|date| Date::new_internal(date))
     }
 
     pub(super) fn day_of_week(&self) -> Weekday {
         self.date.weekday()
     }
 
-    fn new(date: NaiveDate) -> Self {
+    // pub(super) fn date(&self) -> String {
+    //     self.date.format(FORMAT).to_string()
+    // }
+
+    #[cfg(test)]
+    pub(super) fn new(date: NaiveDate) -> Self {
+        Self::new_internal(date)
+    }
+
+    fn new_internal(date: NaiveDate) -> Self {
         Self { date }
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use chrono::{NaiveDate, Weekday};
+mod test_parse {
+    use chrono::NaiveDate;
 
     use super::{Date, Result};
 
@@ -50,7 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn valid_date_parcing() {
+    fn valid_date() {
         let res = Date::parse_from_json(r#"{"date":"29-02-2024"}"#.into()).unwrap();
         let expected = Date::new(NaiveDate::from_ymd_opt(2024, 02, 29).unwrap());
 
@@ -74,6 +93,18 @@ mod tests {
         assert_err(yyyy_mm_dd, msg);
     }
 
+    fn assert_err(r: Result<Date>, msg: &str) {
+        assert!(r.expect_err("expected an error").to_string().contains(msg))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use chrono::Weekday;
+
+    use crate::newspaper::Date;
+
+    //TODO! call try_new("date")
     #[test]
     fn test_various_days_of_week() {
         let date1 = Date::parse_from_json(r#"{"date":"01-01-2023"}"#.into()).unwrap();
@@ -84,9 +115,5 @@ mod tests {
 
         let date3 = Date::parse_from_json(r#"{"date":"25-12-2023"}"#.into()).unwrap();
         assert_eq!(date3.day_of_week(), Weekday::Mon);
-    }
-
-    fn assert_err(r: Result<Date>, msg: &str) {
-        assert!(r.expect_err("expected an error").to_string().contains(msg))
     }
 }

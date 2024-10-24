@@ -12,8 +12,8 @@ pub(crate) struct Signature {
 }
 
 impl Signature {
-    pub(crate) fn signature(&self) -> String {
-        self.signature.clone()
+    pub(crate) fn signature(&self) -> &str {
+        self.signature.as_str()
     }
 
     pub(super) fn try_new(signature: &str) -> Result<Self> {
@@ -21,7 +21,8 @@ impl Signature {
         obj.invariant_held().map(|()| obj)
     }
 
-    #[cfg(test)]
+    // TODO! Become active when load_newspapers starts making requests to the platform
+    // #[cfg(test)] 
     pub(super) fn new(signature: &str) -> Self {
         Self::new_internal(signature)
     }

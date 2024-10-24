@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Represents the frequency of publication of a newspaper over the course of a week.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[serde(transparent)]
 pub(crate) struct WeeklyFrequency {
