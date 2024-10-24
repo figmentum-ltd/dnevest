@@ -1,13 +1,10 @@
 use bindings::{ByteArray, Guest};
 
+
 #[allow(warnings)]
 #[rustfmt::skip]
 mod bindings;
-mod errors;
-mod msgs;
 mod newspaper;
-mod response;
-mod services;
 
 struct Component;
 
