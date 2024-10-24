@@ -149,8 +149,14 @@ pub unsafe fn _export_execute_cabi<T: Guest>(arg0: *mut u8, arg1: usize) -> *mut
             *ptr2.add(8).cast::<usize>() = len6;
             *ptr2.add(4).cast::<*mut u8>() = result6;
         }
-        Err(_) => {
+        Err(e) => {
             *ptr2.add(0).cast::<u8>() = (1i32) as u8;
+            let vec7 = (e).into_boxed_slice();
+            let ptr7 = vec7.as_ptr().cast::<u8>();
+            let len7 = vec7.len();
+            ::core::mem::forget(vec7);
+            *ptr2.add(8).cast::<usize>() = len7;
+            *ptr2.add(4).cast::<*mut u8>() = ptr7.cast_mut();
         }
     };
     ptr2
@@ -180,7 +186,13 @@ pub unsafe fn __post_return_execute<T: Guest>(arg0: *mut u8) {
             }
             _rt::cabi_dealloc(base8, len8 * 16, 4);
         }
-        _ => {}
+        _ => {
+            let l9 = *arg0.add(4).cast::<*mut u8>();
+            let l10 = *arg0.add(8).cast::<usize>();
+            let base11 = l9;
+            let len11 = l10;
+            _rt::cabi_dealloc(base11, len11 * 1, 1);
+        }
     }
 }
 #[doc(hidden)]
@@ -222,8 +234,14 @@ pub unsafe fn _export_query_cabi<T: Guest>(arg0: *mut u8, arg1: usize) -> *mut u
             *ptr2.add(8).cast::<usize>() = len4;
             *ptr2.add(4).cast::<*mut u8>() = result4;
         }
-        Err(_) => {
+        Err(e) => {
             *ptr2.add(0).cast::<u8>() = (1i32) as u8;
+            let vec5 = (e).into_boxed_slice();
+            let ptr5 = vec5.as_ptr().cast::<u8>();
+            let len5 = vec5.len();
+            ::core::mem::forget(vec5);
+            *ptr2.add(8).cast::<usize>() = len5;
+            *ptr2.add(4).cast::<*mut u8>() = ptr5.cast_mut();
         }
     };
     ptr2
@@ -250,13 +268,19 @@ pub unsafe fn __post_return_query<T: Guest>(arg0: *mut u8) {
             }
             _rt::cabi_dealloc(base6, len6 * 8, 4);
         }
-        _ => {}
+        _ => {
+            let l7 = *arg0.add(4).cast::<*mut u8>();
+            let l8 = *arg0.add(8).cast::<usize>();
+            let base9 = l7;
+            let len9 = l8;
+            _rt::cabi_dealloc(base9, len9 * 1, 1);
+        }
     }
 }
 pub trait Guest {
     /// Component API
-    fn execute(cmd: ByteArray) -> Result<_rt::Vec<Event>, ()>;
-    fn query(req: ByteArray) -> Result<_rt::Vec<ByteArray>, ()>;
+    fn execute(cmd: ByteArray) -> Result<_rt::Vec<Event>, ByteArray>;
+    fn query(req: ByteArray) -> Result<_rt::Vec<ByteArray>, ByteArray>;
 }
 #[doc(hidden)]
 macro_rules! __export_world_example_cabi {
@@ -333,16 +357,16 @@ pub(crate) use __export_example_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[link_section = "component-type:wit-bindgen:0.31.0:component:dnevest:example:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 344] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xda\x01\x01A\x02\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 346] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xdc\x01\x01A\x02\x01\
 A\x13\x01p}\x03\0\x0abyte-array\x03\0\0\x01o\x02s\x01\x03\0\x05event\x03\0\x02\x01\
 @\x02\x03keys\x03req\x01\x01\0\x03\0\x07persist\x01\x04\x01k\x01\x01@\x01\x03key\
 s\0\x05\x03\0\x08retrieve\x01\x06\x01p\x01\x01@\x02\x05starts\x03ends\0\x07\x03\0\
-\x0eretrieve-range\x01\x08\x01p\x03\x01j\x01\x09\0\x01@\x01\x03cmd\x01\0\x0a\x04\
-\0\x07execute\x01\x0b\x01j\x01\x07\0\x01@\x01\x03req\x01\0\x0c\x04\0\x05query\x01\
-\x0d\x04\x01\x19component:dnevest/example\x04\0\x0b\x0d\x01\0\x07example\x03\0\0\
-\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.216.0\x10wit-bind\
-gen-rust\x060.31.0";
+\x0eretrieve-range\x01\x08\x01p\x03\x01j\x01\x09\x01\x01\x01@\x01\x03cmd\x01\0\x0a\
+\x04\0\x07execute\x01\x0b\x01j\x01\x07\x01\x01\x01@\x01\x03req\x01\0\x0c\x04\0\x05\
+query\x01\x0d\x04\x01\x19component:dnevest/example\x04\0\x0b\x0d\x01\0\x07exampl\
+e\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.216.0\x10\
+wit-bindgen-rust\x060.31.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

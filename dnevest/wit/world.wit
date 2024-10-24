@@ -10,6 +10,6 @@ world example {
     import retrieve-range: func(start: string, end: string) -> list<byte-array>;
 
     // Component API
-    export execute: func(cmd: byte-array) -> result<list<event>>;
-    export query: func(req: byte-array) -> result<list<byte-array>>;
+    export execute: func(cmd: byte-array) -> result<list<event>, byte-array>;
+    export query: func(req: byte-array) -> result<list<byte-array>, byte-array>;
 }
