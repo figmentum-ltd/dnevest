@@ -22,8 +22,8 @@ impl Signature {
     }
 
     // TODO! Become active when load_newspapers starts making requests to the platform
-    // #[cfg(test)] 
-    pub(super) fn new(signature: &str) -> Self {
+    // #[cfg(test)]
+    pub(crate) fn new(signature: &str) -> Self {
         Self::new_internal(signature)
     }
 

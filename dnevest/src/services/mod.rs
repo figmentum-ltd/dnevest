@@ -1,44 +1,40 @@
-use std::result::Result as StdResult;
-
-use chrono::Weekday;
+use std::{collections::HashMap, result::Result as StdResult};
 
 use crate::{
     bindings::{self, ByteArray},
-    newspaper::{self, Date, DateDTO, Newspaper, NewspaperDTO},
+    newspaper::{self, Newspaper, NewspaperDTO},
     response::Event,
+    Component, HostImports,
 };
 
 mod error;
 
 pub(super) use error::Error as ServiceError;
 
-pub fn create_newspaper(input: NewspaperDTO) -> StdResult<bindings::Event, ByteArray> {
+pub fn create_newspaper<H: HostImports>(
+    host: &mut H,
+    input: NewspaperDTO,
+) -> StdResult<bindings::Event, ByteArray> {
     input
         .try_into()
         .map_err(|err| ServiceError::InvalidNewspaper(err))
-        .and_then(new_newspaper)
+        .and_then(|newspaper| self::new_newspaper(host, newspaper))
         .or_else(|error| error::serialize_errors(vec![error]))
 }
 
-pub fn newspapers_by_date(date_dto: DateDTO) -> Result<ByteArray, ByteArray> {
-    // date_dto
-    //     .try_into()
-    //     .map_err(|err| ServiceError::InvalidDate(err))
-    //     .and_then(find_newspapers)
-    //     .or_else(|error| {
-    //         //serialize_errors(vec![error])
-
-    //     })
-    todo!()
-}
-// parse_date_from_json(json_data).and_then(|date| {
-//     //call to import all stored newspapers
-//     let newspapers: Vec<Newspaper> = load_newspapers();
-//     let published_newspapers = newspapers_by_date(json_data);
-// })
+// pub fn newspapers_by_date(date_dto: DateDTO) -> Result<ByteArray, ByteArray> {
+//     date_dto
+//         .try_into()
+//         .map_err(|err| ServiceError::InvalidDate(err))
+//         .and_then(newspaper::newspapers_by_date)
+//         .or_else(|error| error::serialize_errors(vec![error]))
+// }
 
 // TODO! - do we need 'newspaper' to pe present in every name
-fn new_newspaper(newspaper: Newspaper) -> StdResult<bindings::Event, ServiceError> {
+fn new_newspaper<H: HostImports>(
+    host: &mut H,
+    newspaper: Newspaper,
+) -> StdResult<bindings::Event, ServiceError> {
     // TODO! remove the cloning
     let obj = newspaper.clone();
     let signature = obj.signature_str();
@@ -46,8 +42,8 @@ fn new_newspaper(newspaper: Newspaper) -> StdResult<bindings::Event, ServiceErro
 
     let serialized_newspaper =
         serde_json::to_vec(&dto).map_err(|_| ServiceError::SerializationFault)?;
-    // TODO! abstract persistence API
-    bindings::persist("dto.signature", &serialized_newspaper);
+
+    host.persist(signature, &serialized_newspaper);
 
     let serialized_event = Event::NewspaperCreated(signature).serialize_event()?;
     Ok(bindings::Event {
@@ -56,6 +52,67 @@ fn new_newspaper(newspaper: Newspaper) -> StdResult<bindings::Event, ServiceErro
     })
 }
 
-// fn find_newspapers(date: Date) -> Result<Vec<ByteArray>, ServiceError> {
-//     let newspapers = newspaper::load_newspapers();
-// }
+struct MockHost {
+    store: HashMap<String, ByteArray>,
+}
+
+impl MockHost {
+    fn new() -> Self {
+        Self {
+            store: HashMap::new(),
+        }
+    }
+
+    fn get(&self, key: &str) -> Option<&ByteArray> {
+        self.store.get(key)
+    }
+}
+
+impl HostImports for MockHost {
+    fn persist(&mut self, key: &str, req: &ByteArray) {
+        self.store.insert(key.to_string(), req.clone());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        bindings::{self, ByteArray},
+        newspaper::{NewspaperDTO, SignatureDTO, WeeklyFrequency},
+    };
+
+    use super::{MockHost, ServiceError};
+
+    #[test]
+    fn create() {
+        let mut host = MockHost::new();
+        let dto = NewspaperDTO::new(
+            SignatureDTO("В4667".to_string()),
+            "Орбита".to_string(),
+            1969,
+            Some(1991),
+            WeeklyFrequency::new([false, false, false, false, false, true, false]),
+        );
+        let serialized_newspaper = serde_json::to_vec(&dto).unwrap();
+
+        let res = super::create_newspaper(&mut host, dto);
+
+        assert_eq!(&serialized_newspaper, host.get("В4667").unwrap())
+    }
+
+    #[test]
+    fn err_in_creation() {
+        let mut host = MockHost::new();
+        let dto = NewspaperDTO::new(
+            SignatureDTO("B4667".to_string()),
+            "Орбита".to_string(),
+            1969,
+            Some(1991),
+            WeeklyFrequency::new([false, false, false, false, false, true, false]),
+        );
+
+        let res = super::create_newspaper(&mut host, dto);
+
+        assert!(res.is_err())
+    }
+}

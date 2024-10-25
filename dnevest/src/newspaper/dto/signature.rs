@@ -5,7 +5,7 @@ use crate::newspaper::{Error, Signature};
 #[derive(Serialize, Deserialize)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[serde(transparent)]
-pub(crate) struct SignatureDTO(pub(super) String);
+pub(crate) struct SignatureDTO(pub(crate) String);
 
 impl TryFrom<SignatureDTO> for Signature {
     type Error = Error;
@@ -33,7 +33,7 @@ mod tests {
         let dto: SignatureDTO = signature.into();
         let serialized = serde_json::to_string(&dto).unwrap();
 
-        assert_eq!(serialized, r#"В3452"#)
+        assert_eq!(serialized, r#""В3452""#)
     }
 
     #[test]

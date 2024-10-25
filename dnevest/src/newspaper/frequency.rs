@@ -9,11 +9,11 @@ pub(crate) struct WeeklyFrequency {
 }
 
 impl WeeklyFrequency {
-    pub(super) fn new(days: [bool; 7]) -> Self {
+    pub(crate) fn new(days: [bool; 7]) -> Self {
         Self { published_on: days }
     }
 
-    fn published_on(&self, day_index: usize) -> bool {
+    pub(super) fn published_on(&self, day_index: usize) -> bool {
         debug_assert!(
             day_index < 7,
             "Index out of bounds: {}. Expected 0-6.",

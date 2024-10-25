@@ -7,7 +7,7 @@ pub struct QueryNewspaperDTO {
 }
 
 impl QueryNewspaperDTO {
-    fn new(signature: String, name: String) -> Self {
+    pub(crate) fn new(signature: String, name: String) -> Self {
         Self { signature, name }
     }
 
@@ -33,5 +33,4 @@ mod tests {
 
         assert_eq!(serialized, expected_json);
     }
-
 }

@@ -1,11 +1,13 @@
 use serde::{Deserialize, Serialize};
 
 mod date;
+mod query_newspaper;
 mod signature;
 
 use super::{error::Error, frequency::WeeklyFrequency, Newspaper};
 
-pub(crate) use date::DateDTO;
+// pub(crate) use date::DateDTO;
+pub(crate) use query_newspaper::QueryNewspaperDTO;
 pub(crate) use signature::SignatureDTO;
 
 //TODO! - remove DTO-s
@@ -16,23 +18,23 @@ pub(crate) struct NewspaperDTO {
     name: String,
     start_year: u16,
     end_year: Option<u16>,
-    published_on: WeeklyFrequency,
+    weekly_shedule: WeeklyFrequency,
 }
 
 impl NewspaperDTO {
-    pub(super) fn new(
+    pub(crate) fn new(
         signature: SignatureDTO,
         name: String,
         start_year: u16,
         end_year: Option<u16>,
-        published_on: WeeklyFrequency,
+        weekly_shedule: WeeklyFrequency,
     ) -> Self {
         Self {
             signature,
             name: name,
             start_year,
             end_year,
-            published_on,
+            weekly_shedule,
         }
     }
 }
@@ -47,7 +49,7 @@ impl TryFrom<NewspaperDTO> for Newspaper {
                 dto.name,
                 dto.start_year,
                 dto.end_year,
-                dto.published_on,
+                dto.weekly_shedule,
             ))
         })
     }
@@ -61,26 +63,26 @@ mod tests {
 
     #[test]
     fn serialize() {
-        let published_on = WeeklyFrequency::new([false, false, false, false, false, true, false]);
+        let weekly_shedule = WeeklyFrequency::new([false, false, false, false, false, true, false]);
         let newspaper = Newspaper::new(
             Signature::new("В4667"),
             "Орбита".to_string(),
             1969,
             Some(1991),
-            published_on,
+            weekly_shedule,
         );
         let dto: NewspaperDTO = newspaper.try_into().unwrap();
         let serialized = serde_json::to_string(&dto).unwrap();
 
         assert_eq!(
             serialized,
-            r#"{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"published_on":[false,false,false,false,false,true,false]}"#
+            r#"{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"weekly_shedule":[false,false,false,false,false,true,false]}"#
         );
     }
 
     #[test]
     fn deserialize() {
-        let json = r#"{"signature":"В1612","name":"Труд","start_year":1946,"end_year":null,"published_on":[true,true,true,true,true,true,true]}"#;
+        let json = r#"{"signature":"В1612","name":"Труд","start_year":1946,"end_year":null,"weekly_shedule":[true,true,true,true,true,true,true]}"#;
 
         let deserialized: NewspaperDTO =
             serde_json::from_str(json).expect("Failed to deserialize JSON");
