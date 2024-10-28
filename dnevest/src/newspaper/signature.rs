@@ -1,40 +1,32 @@
 use serde::{Deserialize, Serialize};
+use std::result;
 
 use super::error::{Error, Result};
 
-use crate::newspaper::dto;
-
+/// Brings invariant checking as a step in deserializing a Newspaper
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(try_from = "dto::SignatureDTO", into = "dto::SignatureDTO")]
-pub(crate) struct Signature {
-    signature: String,
-}
+#[serde(try_from = "String")]
+pub(crate) struct Signature(String);
 
 impl Signature {
     pub(crate) fn signature(&self) -> &str {
-        self.signature.as_str()
+        self.0.as_str()
     }
 
-    pub(super) fn try_new(signature: &str) -> Result<Self> {
-        let obj = Self::new_internal(signature);
+    pub(super) fn try_new(signature: String) -> Result<Self> {
+        let obj = Self(signature);
         obj.invariant_held().map(|()| obj)
     }
 
     // TODO! Become active when load_newspapers starts making requests to the platform
     // #[cfg(test)]
     pub(crate) fn new(signature: &str) -> Self {
-        Self::new_internal(signature)
-    }
-
-    fn new_internal(signature: &str) -> Self {
-        Self {
-            signature: signature.to_string(),
-        }
+        Self(signature.to_string())
     }
 
     fn invariant_held(&self) -> Result<()> {
-        let sign = self.signature.as_str();
+        let sign = self.0.as_str();
         let mut chars = sign.chars();
 
         // the character 'B' in cyrillic takes 2 bytes, so the signature length is 6
@@ -50,40 +42,57 @@ impl Signature {
     }
 }
 
+impl TryFrom<String> for Signature {
+    type Error = Error;
+
+    fn try_from(value: String) -> result::Result<Self, Self::Error> {
+        let obj = Signature(value);
+        obj.invariant_held().map(|()| obj)
+    }
+}
+
 #[cfg(test)]
 mod test_invariant {
     use super::{Result, Signature};
 
     #[test]
     fn valid_signatures() {
-        assert!(Signature::try_new("В1234").is_ok());
-        assert!(Signature::try_new("В0001").is_ok());
-        assert!(Signature::try_new("В9999").is_ok());
+        assert!(new("В1234").is_ok());
+        assert!(new("В0001").is_ok());
+        assert!(new("В9999").is_ok());
     }
 
     #[test]
     fn not_maching_pattern() {
         const MSG: &str = "Signature does not match the required pattern";
 
-        assert_err(new_invalid("В0000"), MSG);
-        assert_err(new_invalid("b2974"), MSG);
-        assert_err(new_invalid("в2974"), MSG);
-        assert_err(new_invalid("n2974"), MSG);
-        assert_err(new_invalid("N0970"), MSG);
-        assert_err(new_invalid("0000"), MSG);
-        assert_err(new_invalid("В-780"), MSG);
-        assert_err(new_invalid("В34580"), MSG);
-        assert_err(new_invalid("В+450"), MSG);
+        assert_err(new("В0000"), MSG);
+        assert_err(new("b2974"), MSG);
+        assert_err(new("в2974"), MSG);
+        assert_err(new("n2974"), MSG);
+        assert_err(new("N0970"), MSG);
+        assert_err(new("0000"), MSG);
+        assert_err(new("В-780"), MSG);
+        assert_err(new("В34580"), MSG);
+        assert_err(new("В+450"), MSG);
     }
 
     #[test]
     fn using_latin_letter() {
         const MSG: &str = "Signature does not match the required pattern";
-        assert_err(new_invalid("B3497"), MSG);
+        assert_err(new("B3497"), MSG);
     }
 
-    fn new_invalid(sign: &str) -> Result<Signature> {
-        Signature::try_new(sign)
+    #[test]
+    fn serialize() {
+        let signature = Signature::new("В3452");
+        let serialized = serde_json::to_string(&signature).unwrap();
+
+        assert_eq!(serialized, r#""В3452""#)
+    }
+
+    fn new(sign: &str) -> Result<Signature> {
+        Signature::try_from(sign.to_string())
     }
 
     fn assert_err(r: Result<Signature>, msg: &str) {

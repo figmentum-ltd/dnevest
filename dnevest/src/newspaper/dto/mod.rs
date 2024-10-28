@@ -2,19 +2,17 @@ use serde::{Deserialize, Serialize};
 
 mod date;
 mod query_newspaper;
-mod signature;
 
-use super::{error::Error, frequency::WeeklyFrequency, Newspaper};
+use super::{error::Error, frequency::WeeklyFrequency, Newspaper, Signature};
 
-// pub(crate) use date::DateDTO;
+pub(crate) use date::DateDTO;
 pub(crate) use query_newspaper::QueryNewspaperDTO;
-pub(crate) use signature::SignatureDTO;
 
 //TODO! - remove DTO-s
 #[derive(Serialize, Deserialize)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub(crate) struct NewspaperDTO {
-    signature: SignatureDTO,
+    signature: Signature,
     name: String,
     start_year: u16,
     end_year: Option<u16>,
@@ -23,7 +21,7 @@ pub(crate) struct NewspaperDTO {
 
 impl NewspaperDTO {
     pub(crate) fn new(
-        signature: SignatureDTO,
+        signature: Signature,
         name: String,
         start_year: u16,
         end_year: Option<u16>,
@@ -43,15 +41,13 @@ impl TryFrom<NewspaperDTO> for Newspaper {
     type Error = Error;
 
     fn try_from(dto: NewspaperDTO) -> Result<Self, Self::Error> {
-        dto.signature.try_into().and_then(|signature| {
-            Ok(Newspaper::new(
-                signature,
-                dto.name,
-                dto.start_year,
-                dto.end_year,
-                dto.weekly_shedule,
-            ))
-        })
+        Ok(Newspaper::new(
+            dto.signature,
+            dto.name,
+            dto.start_year,
+            dto.end_year,
+            dto.weekly_shedule,
+        ))
     }
 }
 
@@ -59,7 +55,7 @@ impl TryFrom<NewspaperDTO> for Newspaper {
 mod tests {
     use crate::newspaper::{Newspaper, Signature, WeeklyFrequency};
 
-    use super::{NewspaperDTO, SignatureDTO};
+    use super::NewspaperDTO;
 
     #[test]
     fn serialize() {
@@ -87,7 +83,7 @@ mod tests {
         let deserialized: NewspaperDTO =
             serde_json::from_str(json).expect("Failed to deserialize JSON");
         let expected_dto = NewspaperDTO::new(
-            SignatureDTO("В1612".to_string()),
+            Signature::new("В1612"),
             "Труд".to_string(),
             1946,
             None,

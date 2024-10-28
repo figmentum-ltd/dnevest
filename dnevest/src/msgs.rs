@@ -31,7 +31,7 @@ mod test_deserialization {
 
     use crate::{
         bindings::ByteArray,
-        newspaper::{DateDTO, NewspaperDTO, SignatureDTO, WeeklyFrequency},
+        newspaper::{DateDTO, NewspaperDTO, Signature, WeeklyFrequency},
     };
 
     use super::{ExecuteMsg, QueryMsg};
@@ -40,7 +40,7 @@ mod test_deserialization {
     fn valid_execute_msg() {
         let msg = r#"{"CreateNewspaper":{"input":{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"weekly_shedule":[false,false,false,false,false,true,false]}}}"#;
         let dto = NewspaperDTO::new(
-            SignatureDTO("В4667".to_string()),
+            Signature::new("В4667"),
             "Орбита".to_string(),
             1969,
             Some(1991),

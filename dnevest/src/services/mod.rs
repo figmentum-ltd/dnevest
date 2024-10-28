@@ -2,7 +2,7 @@ use std::{collections::HashMap, result::Result as StdResult};
 
 use crate::{
     bindings::{self, ByteArray},
-    newspaper::{self, Newspaper, NewspaperDTO},
+    newspaper::{self, DateDTO, Newspaper, NewspaperDTO},
     response::Event,
     Component, HostImports,
 };
@@ -22,13 +22,13 @@ pub fn create_newspaper<H: HostImports>(
         .or_else(|error| error::serialize_errors(vec![error]))
 }
 
-// pub fn newspapers_by_date(date_dto: DateDTO) -> Result<ByteArray, ByteArray> {
-//     date_dto
-//         .try_into()
-//         .map_err(|err| ServiceError::InvalidDate(err))
-//         .and_then(newspaper::newspapers_by_date)
-//         .or_else(|error| error::serialize_errors(vec![error]))
-// }
+pub fn newspapers_by_date(date_dto: DateDTO) -> Result<ByteArray, ByteArray> {
+    date_dto
+        .try_into()
+        .map_err(|err| ServiceError::InvalidDate(err))
+        .and_then(newspaper::newspapers_by_date)
+        .or_else(|error| error::serialize_errors(vec![error]))
+}
 
 // TODO! - do we need 'newspaper' to pe present in every name
 fn new_newspaper<H: HostImports>(
@@ -78,7 +78,7 @@ impl HostImports for MockHost {
 mod tests {
     use crate::{
         bindings::{self, ByteArray},
-        newspaper::{NewspaperDTO, SignatureDTO, WeeklyFrequency},
+        newspaper::{NewspaperDTO, Signature, WeeklyFrequency},
     };
 
     use super::{MockHost, ServiceError};
@@ -87,7 +87,7 @@ mod tests {
     fn create() {
         let mut host = MockHost::new();
         let dto = NewspaperDTO::new(
-            SignatureDTO("В4667".to_string()),
+            Signature::new("В4667"),
             "Орбита".to_string(),
             1969,
             Some(1991),
@@ -104,7 +104,7 @@ mod tests {
     fn err_in_creation() {
         let mut host = MockHost::new();
         let dto = NewspaperDTO::new(
-            SignatureDTO("B4667".to_string()),
+            Signature::new("B4667"),
             "Орбита".to_string(),
             1969,
             Some(1991),
