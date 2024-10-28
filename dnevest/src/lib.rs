@@ -1,6 +1,6 @@
 use bindings::{ByteArray, Guest};
 
-use msgs::ExecuteMsg;
+use msgs::{ExecuteMsg, QueryMsg};
 
 #[allow(warnings)]
 #[rustfmt::skip]
@@ -15,7 +15,7 @@ struct Component;
 
 impl Guest for Component {
     fn execute(cmd: ByteArray) -> Result<bindings::Event, ByteArray> {
-        msgs::deserialize_execute_msg(cmd).and_then(|msg| match msg {
+        msgs::deserialize_msg(cmd).and_then(|msg| match msg {
             ExecuteMsg::CreateNewspaper { input } => {
                 services::create_newspaper(&mut Component, input)
             }
@@ -23,10 +23,9 @@ impl Guest for Component {
     }
 
     fn query(req: ByteArray) -> Result<ByteArray, ByteArray> {
-        // msgs::deserialize_query_msg(req).and_then(|msg| match msg {
-        //     QueryMsg::NewspapersByDate { date } => services::newspapers_by_date(date),
-        // })
-        todo!()
+        msgs::deserialize_msg(req).and_then(|msg| match msg {
+            QueryMsg::NewspapersByDate { date } => services::newspapers_by_date(date),
+        })
     }
 }
 
