@@ -2,7 +2,7 @@ use std::{collections::HashMap, result::Result as StdResult};
 
 use crate::{
     bindings::{self, ByteArray},
-    newspaper::{self, DateDTO, Newspaper, NewspaperDTO},
+    newspaper::{self, Date, Newspaper, NewspaperDTO},
     response::Event,
     Component, HostImports,
 };
@@ -22,12 +22,8 @@ pub fn create_newspaper<H: HostImports>(
         .or_else(|error| error::serialize_errors(vec![error]))
 }
 
-pub fn newspapers_by_date(date_dto: DateDTO) -> Result<ByteArray, ByteArray> {
-    date_dto
-        .try_into()
-        .map_err(|err| ServiceError::InvalidDate(err))
-        .and_then(newspaper::newspapers_by_date)
-        .or_else(|error| error::serialize_errors(vec![error]))
+pub fn newspapers_by_date(date: Date) -> Result<ByteArray, ByteArray> {
+    newspaper::newspapers_by_date(date).or_else(|error| error::serialize_errors(vec![error]))
 }
 
 // TODO! - do we need 'newspaper' to pe present in every name

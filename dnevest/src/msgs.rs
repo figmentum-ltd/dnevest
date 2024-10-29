@@ -4,7 +4,7 @@ use std::result::Result;
 use crate::{
     bindings::ByteArray,
     errors::Error,
-    newspaper::{DateDTO, NewspaperDTO},
+    newspaper::{Date, NewspaperDTO},
 };
 
 //TODO! use Newspaper
@@ -18,7 +18,7 @@ pub enum ExecuteMsg {
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Deserialize)]
 pub enum QueryMsg {
-    NewspapersByDate { date: DateDTO },
+    NewspapersByDate { date: Date },
 }
 
 pub(crate) fn deserialize_msg<T: DeserializeOwned>(msg: ByteArray) -> Result<T, ByteArray> {
@@ -31,7 +31,7 @@ mod test_deserialization {
 
     use crate::{
         bindings::ByteArray,
-        newspaper::{DateDTO, NewspaperDTO, Signature, WeeklyFrequency},
+        newspaper::{Date, NewspaperDTO, Signature, WeeklyFrequency},
     };
 
     use super::{ExecuteMsg, QueryMsg};
@@ -79,7 +79,7 @@ mod test_deserialization {
     fn valid_query_msg() {
         let msg = r#"{"NewspapersByDate":{"date":"29-06-2024"}}"#;
         let expected = QueryMsg::NewspapersByDate {
-            date: DateDTO("29-06-2024".to_string()),
+            date: Date::try_from("29-06-2024".to_string()).unwrap(),
         };
         let res = super::deserialize_msg::<QueryMsg>(msg.into()).expect("deserialization failed");
 

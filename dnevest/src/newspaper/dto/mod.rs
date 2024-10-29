@@ -1,11 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-mod date;
 mod query_newspaper;
 
 use super::{error::Error, frequency::WeeklyFrequency, Newspaper, Signature};
 
-pub(crate) use date::DateDTO;
 pub(crate) use query_newspaper::QueryNewspaperDTO;
 
 //TODO! - remove DTO-s
