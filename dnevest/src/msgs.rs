@@ -4,17 +4,15 @@ use std::result::Result;
 use crate::{
     bindings::ByteArray,
     errors::Error,
-    newspaper::{Date, NewspaperDTO},
+    newspaper::{Date, Newspaper},
 };
 
-//TODO! use Newspaper
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Deserialize)]
 pub enum ExecuteMsg {
-    CreateNewspaper { input: NewspaperDTO },
+    CreateNewspaper { input: Newspaper },
 }
 
-//TODO! use Date instead of DateDTO
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Deserialize)]
 pub enum QueryMsg {
@@ -31,7 +29,7 @@ mod test_deserialization {
 
     use crate::{
         bindings::ByteArray,
-        newspaper::{Date, NewspaperDTO, Signature, WeeklyFrequency},
+        newspaper::{Date, Newspaper, Signature, WeeklyFrequency},
     };
 
     use super::{ExecuteMsg, QueryMsg};
@@ -39,14 +37,14 @@ mod test_deserialization {
     #[test]
     fn valid_execute_msg() {
         let msg = r#"{"CreateNewspaper":{"input":{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"weekly_shedule":[false,false,false,false,false,true,false]}}}"#;
-        let dto = NewspaperDTO::new(
+        let newspaper = Newspaper::new(
             Signature::new("В4667"),
             "Орбита".to_string(),
             1969,
             Some(1991),
             WeeklyFrequency::new([false, false, false, false, false, true, false]),
         );
-        let expected = ExecuteMsg::CreateNewspaper { input: dto };
+        let expected = ExecuteMsg::CreateNewspaper { input: newspaper };
         let res = super::deserialize_msg::<ExecuteMsg>(msg.into()).expect("deserialization failed");
 
         assert_eq!(res, expected)

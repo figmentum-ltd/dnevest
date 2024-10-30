@@ -3,7 +3,10 @@ use std::result;
 use chrono::{Datelike, NaiveDate, Weekday};
 use serde::Deserialize;
 
-use super::error::{Error, Result};
+use super::{
+    error::{Error, Result},
+    Year,
+};
 
 const FORMAT: &str = "%d-%m-%Y";
 
@@ -23,9 +26,23 @@ impl Date {
         self.0.weekday()
     }
 
+    pub(super) fn year(&self) -> Year {
+        self.0
+            .year()
+            .try_into()
+            .expect("Year must be a positive number")
+    }
+
     #[cfg(test)]
-    pub(crate) fn new(date: NaiveDate) -> Self {
-        Self(date)
+    pub(crate) fn new(day: u32, month: u32, year: Year) -> Self {
+        Self(
+            NaiveDate::from_ymd_opt(
+                year.try_into().expect("Failed conver u32 to i32"),
+                month,
+                day,
+            )
+            .expect("Failed create a valid NaiveDate object"),
+        )
     }
 }
 
@@ -39,14 +56,12 @@ impl TryFrom<String> for Date {
 
 #[cfg(test)]
 mod test_parse {
-    use chrono::NaiveDate;
-
     use super::{Date, Result};
 
     #[test]
     fn valid_date() {
         let res = Date::try_new("29-02-2024").unwrap();
-        let expected = Date::new(NaiveDate::from_ymd_opt(2024, 02, 29).unwrap());
+        let expected = Date::new(29, 02, 2024);
 
         assert_eq!(res, expected);
     }

@@ -5,24 +5,19 @@ use super::error::{Error, Result};
 
 /// Brings invariant checking as a step in deserializing a Newspaper
 #[cfg_attr(test, derive(Debug, PartialEq))]
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(try_from = "String")]
 pub(crate) struct Signature(String);
 
 impl Signature {
-    pub(crate) fn signature(&self) -> &str {
-        self.0.as_str()
-    }
-
-    pub(super) fn try_new(signature: String) -> Result<Self> {
-        let obj = Self(signature);
-        obj.invariant_held().map(|()| obj)
-    }
-
     // TODO! Become active when load_newspapers starts making requests to the platform
     // #[cfg(test)]
     pub(crate) fn new(signature: &str) -> Self {
         Self(signature.to_string())
+    }
+
+    pub(super) fn signature(&self) -> &str {
+        self.0.as_str()
     }
 
     fn invariant_held(&self) -> Result<()> {

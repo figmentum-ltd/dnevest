@@ -1,16 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 /// Represents the frequency of publication of a newspaper over the course of a week.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[serde(transparent)]
-pub(crate) struct WeeklyFrequency {
-    published_on: [bool; 7],
-}
+pub(crate) struct WeeklyFrequency([bool; 7]);
 
 impl WeeklyFrequency {
     pub(crate) fn new(days: [bool; 7]) -> Self {
-        Self { published_on: days }
+        Self(days)
     }
 
     pub(super) fn published_on(&self, day_index: usize) -> bool {
@@ -20,7 +18,7 @@ impl WeeklyFrequency {
             day_index
         );
 
-        self.published_on[day_index]
+        self.0[day_index]
     }
 }
 

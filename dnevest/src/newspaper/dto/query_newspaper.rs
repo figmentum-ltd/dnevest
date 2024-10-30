@@ -1,17 +1,14 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Debug, PartialEq)]
+#[derive(Serialize)]
+#[cfg_attr(test, derive(Debug, PartialEq, Deserialize))]
 pub struct QueryNewspaperDTO {
     signature: String,
     name: String,
 }
 
 impl QueryNewspaperDTO {
-    pub(crate) fn new(signature: String, name: String) -> Self {
-        Self { signature, name }
-    }
-
-    fn new_internal(signature: &str, name: &str) -> Self {
+    pub(crate) fn new(signature: &str, name: &str) -> Self {
         Self {
             signature: signature.to_string(),
             name: name.to_string(),
@@ -26,7 +23,7 @@ mod tests {
 
     #[test]
     fn valid_serialize() {
-        let newspaper = QueryNewspaperDTO::new_internal("B1645", "Стършел");
+        let newspaper = QueryNewspaperDTO::new("B1645", "Стършел");
         let serialized = to_string(&newspaper).expect("Failed to serialize");
 
         let expected_json = r#"{"signature":"B1645","name":"Стършел"}"#;

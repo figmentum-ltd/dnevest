@@ -1,8 +1,8 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{bindings::ByteArray, services::ServiceError};
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Deserialize)]
 pub enum Event<'a> {
     NewspaperCreated(&'a str),
 }

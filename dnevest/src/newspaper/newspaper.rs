@@ -2,29 +2,24 @@ use serde::{Deserialize, Serialize};
 
 use crate::{bindings::ByteArray, services::ServiceError};
 
-use super::{
-    dto::{NewspaperDTO, QueryNewspaperDTO},
-    frequency::WeeklyFrequency,
-    signature::Signature,
-    // Date,
-};
+use super::{dto::QueryNewspaperDTO, frequency::WeeklyFrequency, signature::Signature, Date, Year};
 
-#[derive(Clone, Serialize, Deserialize)]
-#[serde(try_from = "NewspaperDTO", into = "NewspaperDTO")]
+#[derive(Serialize, Deserialize)]
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub(crate) struct Newspaper {
     signature: Signature,
     name: String,
-    start_year: u16,
-    end_year: Option<u16>,
+    start_year: Year,
+    end_year: Option<Year>,
     weekly_shedule: WeeklyFrequency,
 }
 
 impl Newspaper {
-    pub(super) fn new(
+    pub(crate) fn new(
         signature: Signature,
         name: String,
-        start_year: u16,
-        end_year: Option<u16>,
+        start_year: Year,
+        end_year: Option<Year>,
         published_on: WeeklyFrequency,
     ) -> Self {
         Self {
@@ -36,77 +31,136 @@ impl Newspaper {
         }
     }
 
-    // pub(crate) fn signature(&self) -> &Signature {
-    //     &self.signature
-    // }
-
-    pub(crate) fn signature_str(&self) -> &str {
-        self.signature.signature()
+    pub(crate) fn identificator(&self) -> &str {
+        &self.signature.signature()
     }
 
-    fn published_on(&self, day_index: usize) -> bool {
-        self.weekly_shedule.published_on(day_index)
-    }
-}
-//TODO! create new method 'identificator' ~ signature()
-
-impl From<Newspaper> for NewspaperDTO {
-    fn from(value: Newspaper) -> Self {
-        Self::new(
-            value.signature.into(),
-            value.name,
-            value.start_year,
-            value.end_year,
-            value.weekly_shedule,
-        )
+    fn published_on(&self, day_index: usize, year: Year) -> bool {
+        self.start_year <= year
+            && self.end_year.map_or(true, |end| end >= year)
+            && self.weekly_shedule.published_on(day_index)
     }
 }
 
-// impl From<Newspaper> for QueryNewspaperDTO {
-//     fn from(value: Newspaper) -> Self {
-//         Self::new(value.signature_str().to_string(), value.name)
-//     }
-// }
+impl From<&Newspaper> for QueryNewspaperDTO {
+    fn from(value: &Newspaper) -> Self {
+        Self::new(value.identificator(), &value.name)
+    }
+}
 
-// pub(crate) fn newspapers_by_date(date: Date) -> Result<ByteArray, ServiceError> {
-//     let newspapers = self::load_newspapers();
-//     self::published_on(date, newspapers)
-// }
+pub(crate) fn newspapers_by_date(date: Date) -> Result<ByteArray, ServiceError> {
+    // TODO to be replaced by bindings::retrieve()
+    let newspapers = self::load_newspapers();
+    self::published_on(date, &newspapers)
+}
 
-// fn published_on(date: Date, newspapers: Vec<Newspaper>) -> Result<ByteArray, ServiceError> {
-//     let day = (date.day_of_week().number_from_monday() - 1) as usize;
+fn published_on(date: Date, newspapers: &Vec<Newspaper>) -> Result<ByteArray, ServiceError> {
+    let year = date.year();
+    let day = (date.day_of_week().number_from_monday() - 1) as usize;
 
-//     let published_newspapers: Vec<QueryNewspaperDTO> = newspapers
-//         .into_iter()
-//         .filter(|newspaper| newspaper.published_on(day))
-//         .map(|published_newspaper| QueryNewspaperDTO::from(published_newspaper))
-//         .collect();
+    let published_newspapers: Vec<QueryNewspaperDTO> = newspapers
+        .into_iter()
+        .filter(|newspaper| newspaper.published_on(day, year))
+        .map(|published_newspaper| QueryNewspaperDTO::from(published_newspaper))
+        .collect();
 
-//     serde_json::to_vec(&published_newspapers).map_err(|_| ServiceError::SerializationFault)
-// }
+    serde_json::to_vec(&published_newspapers).map_err(|_| ServiceError::SerializationFault)
+}
 
-// fn load_newspapers() -> Vec<Newspaper> {
-//     vec![
-//         Newspaper::new(
-//             Signature::new("В4667"),
-//             "Орбита".to_string(),
-//             1969,
-//             Some(1991),
-//             WeeklyFrequency::new([false, false, false, false, false, true, false]),
-//         ),
-//         Newspaper::new(
-//             Signature::new("В1616"),
-//             "Народен спор".to_string(),
-//             1944,
-//             Some(1989),
-//             WeeklyFrequency::new([true, false, false, true, false, true, false]),
-//         ),
-//         Newspaper::new(
-//             Signature::new("В1612"),
-//             "Труд".to_string(),
-//             1946,
-//             None,
-//             WeeklyFrequency::new([true, true, true, true, true, true, true]),
-//         ),
-//     ]
-// }
+fn load_newspapers() -> Vec<Newspaper> {
+    vec![
+        Newspaper::new(
+            Signature::new("В4667"),
+            "Орбита".to_string(),
+            1969,
+            Some(1991),
+            WeeklyFrequency::new([false, false, false, false, false, true, false]),
+        ),
+        Newspaper::new(
+            Signature::new("В1616"),
+            "Народен спор".to_string(),
+            1944,
+            Some(1989),
+            WeeklyFrequency::new([true, false, false, true, false, true, false]),
+        ),
+        Newspaper::new(
+            Signature::new("В1612"),
+            "Труд".to_string(),
+            1946,
+            None,
+            WeeklyFrequency::new([true, true, true, true, true, true, true]),
+        ),
+    ]
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::newspaper::{Date, QueryNewspaperDTO, Signature, WeeklyFrequency, Year};
+
+    use super::Newspaper;
+
+    #[test]
+    fn serialize() {
+        let weekly_shedule = WeeklyFrequency::new([false, false, false, false, false, true, false]);
+        let newspaper = Newspaper::new(
+            Signature::new("В4667"),
+            "Орбита".to_string(),
+            1969,
+            Some(1991),
+            weekly_shedule,
+        );
+        let serialized = serde_json::to_string(&newspaper).unwrap();
+
+        assert_eq!(
+            serialized,
+            r#"{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"weekly_shedule":[false,false,false,false,false,true,false]}"#
+        );
+    }
+
+    #[test]
+    fn deserialize() {
+        let json = r#"{"signature":"В1612","name":"Труд","start_year":1946,"end_year":null,"weekly_shedule":[true,true,true,true,true,true,true]}"#;
+
+        let deserialized: Newspaper =
+            serde_json::from_str(json).expect("Failed to deserialize JSON");
+        let expected_dto = Newspaper::new(
+            Signature::new("В1612"),
+            "Труд".to_string(),
+            1946,
+            None,
+            WeeklyFrequency::new([true, true, true, true, true, true, true]),
+        );
+
+        assert_eq!(expected_dto, deserialized);
+    }
+
+    #[test]
+    fn newspapers_by_date() {
+        let newspapers = super::load_newspapers();
+
+        //05.07.1987 was a sunday
+        let publicated_1 = publications_on(5, 7, 1987, &newspapers);
+        let expected_1 = vec![QueryNewspaperDTO::new("В1612", "Труд")];
+        assert_eq!(publicated_1, expected_1);
+
+        //14.07.1990 was a saturday
+        let publicated_2 = publications_on(14, 7, 1990, &newspapers);
+        let expected_2 = vec![
+            QueryNewspaperDTO::new("В4667", "Орбита"),
+            QueryNewspaperDTO::new("В1612", "Труд"),
+        ];
+        assert_eq!(publicated_2, expected_2);
+    }
+
+    fn publications_on(
+        day: u32,
+        month: u32,
+        year: Year,
+        newspapers: &Vec<Newspaper>,
+    ) -> Vec<QueryNewspaperDTO> {
+        let res = super::published_on(Date::new(day, month, year), newspapers)
+            .expect("Failed to retrieve newspapers published on the specified date");
+        serde_json::from_slice(&res)
+            .expect("Failed to deserialize the published newspapers from the result")
+    }
+}
