@@ -1,6 +1,6 @@
-# API overvue
+# API Overview
 
-### Add a new newspaper
+### • Add a new newspaper
 In the process of adding a new newspaper, the `execute()` command is used, providing it with the necessary information to create the newspaper. The input data must be in JSON format. 
 
 #### Example input
@@ -31,7 +31,8 @@ When calling the `execute()`, send the data in the following JSON format. Note:
 }
 ```
 
-#### Find newspapers by date
+
+### • Find newspapers by date
 The process of searching for newspapers published on a particular date uses the `query()` method. The provided data must be in JSON format.
 
 #### Example input
