@@ -7,6 +7,9 @@ use crate::bindings::ByteArray;
 pub enum Error {
     #[error("Problem while serialization")]
     SerializationFault,
+
+    #[error("Problem while deserialization")]
+    DeserializationFault,
 }
 
 pub(super) fn serialize_errors<T>(errors: Vec<Error>) -> StdResult<T, ByteArray> {
@@ -14,6 +17,7 @@ pub(super) fn serialize_errors<T>(errors: Vec<Error>) -> StdResult<T, ByteArray>
         .into_iter()
         .map(|error| match error {
             Error::SerializationFault => "Problem while serialization".to_string(),
+            Error::DeserializationFault => "Problem while deserialization".to_string(),
         })
         .collect();
 

@@ -8,8 +8,10 @@ use crate::{
 };
 
 mod error;
+mod mock_host;
 
 pub(super) use error::Error as ServiceError;
+pub(crate) use mock_host::MockHost;
 
 pub fn create_newspaper<H: HostImports>(
     host: &mut H,
@@ -18,8 +20,11 @@ pub fn create_newspaper<H: HostImports>(
     self::new_newspaper(host, input).or_else(|error| error::serialize_errors(vec![error]))
 }
 
-pub fn newspapers_by_date(date: Date) -> Result<ByteArray, ByteArray> {
-    newspaper::newspapers_by_date(date).or_else(|error| error::serialize_errors(vec![error]))
+pub fn newspapers_by_date<H: HostImports>(
+    host: &mut H,
+    date: Date,
+) -> Result<ByteArray, ByteArray> {
+    newspaper::newspapers_by_date(host, date).or_else(|error| error::serialize_errors(vec![error]))
 }
 
 // TODO! - do we need 'newspaper' to pe present in every name
@@ -42,31 +47,10 @@ fn new_newspaper<H: HostImports>(
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
     use crate::{
-        bindings::ByteArray,
         newspaper::{Newspaper, Signature, WeeklyFrequency},
-        HostImports,
+        services::MockHost,
     };
-
-    struct MockHost {
-        store: HashMap<String, ByteArray>,
-    }
-
-    impl MockHost {
-        fn new() -> Self {
-            Self {
-                store: HashMap::new(),
-            }
-        }
-    }
-
-    impl HostImports for MockHost {
-        fn persist(&mut self, key: &str, req: &ByteArray) {
-            self.store.insert(key.to_string(), req.clone());
-        }
-    }
 
     #[test]
     fn create() {

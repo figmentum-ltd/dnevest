@@ -24,18 +24,26 @@ impl Guest for Component {
 
     fn query(req: ByteArray) -> Result<ByteArray, ByteArray> {
         msgs::deserialize_msg(req).and_then(|msg| match msg {
-            QueryMsg::NewspapersByDate { date } => services::newspapers_by_date(date),
+            QueryMsg::NewspapersByDate { date } => {
+                services::newspapers_by_date(&mut Component, date)
+            }
         })
     }
 }
 
 trait HostImports {
     fn persist(&mut self, key: &str, req: &ByteArray);
+
+    fn retrieve_range(&mut self, start: &str, end: &str) -> Vec<ByteArray>;
 }
 
 impl HostImports for Component {
     fn persist(&mut self, key: &str, req: &ByteArray) {
         bindings::persist(key, req)
+    }
+
+    fn retrieve_range(&mut self, start: &str, end: &str) -> Vec<ByteArray> {
+        bindings::retrieve_range(start, end)
     }
 }
 

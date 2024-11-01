@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{bindings::ByteArray, services::ServiceError};
+use crate::{bindings::ByteArray, services::ServiceError, HostImports};
 
 use super::{dto::QueryNewspaperDTO, frequency::WeeklyFrequency, signature::Signature, Date, Year};
 
@@ -48,10 +48,13 @@ impl From<&Newspaper> for QueryNewspaperDTO {
     }
 }
 
-pub(crate) fn newspapers_by_date(date: Date) -> Result<ByteArray, ServiceError> {
-    // TODO to be replaced by bindings::retrieve()
-    let newspapers = self::load_newspapers();
-    self::published_on(date, &newspapers)
+pub(crate) fn newspapers_by_date<H: HostImports>(
+    host: &mut H,
+    date: Date,
+) -> Result<ByteArray, ServiceError> {
+    let ser_newspapers = host.retrieve_range("В", "Г");
+    self::deserialize_newspapers(ser_newspapers)
+        .and_then(|newspapers| self::published_on(date, &newspapers))
 }
 
 fn published_on(date: Date, newspapers: &Vec<Newspaper>) -> Result<ByteArray, ServiceError> {
@@ -67,35 +70,23 @@ fn published_on(date: Date, newspapers: &Vec<Newspaper>) -> Result<ByteArray, Se
     serde_json::to_vec(&published_newspapers).map_err(|_| ServiceError::SerializationFault)
 }
 
-fn load_newspapers() -> Vec<Newspaper> {
-    vec![
-        Newspaper::new(
-            Signature::new("В4667"),
-            "Орбита".to_string(),
-            1969,
-            Some(1991),
-            WeeklyFrequency::new([false, false, false, false, false, true, false]),
-        ),
-        Newspaper::new(
-            Signature::new("В1616"),
-            "Народен спор".to_string(),
-            1944,
-            Some(1989),
-            WeeklyFrequency::new([true, false, false, true, false, true, false]),
-        ),
-        Newspaper::new(
-            Signature::new("В1612"),
-            "Труд".to_string(),
-            1946,
-            None,
-            WeeklyFrequency::new([true, true, true, true, true, true, true]),
-        ),
-    ]
+fn deserialize_newspapers(serialized: Vec<ByteArray>) -> Result<Vec<Newspaper>, ServiceError> {
+    serialized
+        .into_iter()
+        .map(|ser_newspaper| {
+            serde_json::from_slice::<Newspaper>(&ser_newspaper)
+                .map_err(|_| ServiceError::DeserializationFault)
+        })
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::newspaper::{Date, QueryNewspaperDTO, Signature, WeeklyFrequency, Year};
+    use crate::{
+        newspaper::{Date, QueryNewspaperDTO, Signature, WeeklyFrequency, Year},
+        services::MockHost,
+        HostImports,
+    };
 
     use super::Newspaper;
 
@@ -136,15 +127,15 @@ mod tests {
 
     #[test]
     fn newspapers_by_date() {
-        let newspapers = super::load_newspapers();
+        let mut host = MockHost::new();
 
         //05.07.1987 was a sunday
-        let publicated_1 = publications_on(5, 7, 1987, &newspapers);
+        let publicated_1 = publicized_on(5, 7, 1987, &mut host);
         let expected_1 = vec![QueryNewspaperDTO::new("В1612", "Труд")];
         assert_eq!(publicated_1, expected_1);
 
         //14.07.1990 was a saturday
-        let publicated_2 = publications_on(14, 7, 1990, &newspapers);
+        let publicated_2 = publicized_on(14, 7, 1990, &mut host);
         let expected_2 = vec![
             QueryNewspaperDTO::new("В4667", "Орбита"),
             QueryNewspaperDTO::new("В1612", "Труд"),
@@ -152,13 +143,13 @@ mod tests {
         assert_eq!(publicated_2, expected_2);
     }
 
-    fn publications_on(
+    fn publicized_on<H: HostImports>(
         day: u32,
         month: u32,
         year: Year,
-        newspapers: &Vec<Newspaper>,
+        host: &mut H,
     ) -> Vec<QueryNewspaperDTO> {
-        let res = super::published_on(Date::new(day, month, year), newspapers)
+        let res = super::newspapers_by_date(host, Date::new(day, month, year))
             .expect("Failed to retrieve newspapers published on the specified date");
         serde_json::from_slice(&res)
             .expect("Failed to deserialize the published newspapers from the result")
