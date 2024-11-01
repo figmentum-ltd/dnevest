@@ -20,7 +20,7 @@ pub enum QueryMsg {
 }
 
 pub(crate) fn deserialize_msg<T: DeserializeOwned>(msg: ByteArray) -> Result<T, ByteArray> {
-    serde_json::from_slice::<T>(&msg).map_err(|err| Error::InvalidRequest(err).to_byte_array())
+    serde_json::from_slice::<T>(&msg).map_err(|err| Error::InvalidRequest(err).serialize())
 }
 
 #[cfg(test)]

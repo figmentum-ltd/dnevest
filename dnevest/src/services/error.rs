@@ -1,28 +1,19 @@
-use std::result::Result as StdResult;
 use thiserror::Error;
 
 use crate::bindings::ByteArray;
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Problem while serialization")]
-    SerializationFault,
+    #[error("Problem while serialization: {0}")]
+    SerializationFault(serde_json::Error),
 
-    #[error("Problem while deserialization")]
-    DeserializationFault,
+    #[error("Problem while deserialization: {0}")]
+    DeserializationFault(serde_json::Error),
 }
 
-pub(super) fn serialize_errors<T>(errors: Vec<Error>) -> StdResult<T, ByteArray> {
-    let serialized_errors: Vec<String> = errors
-        .into_iter()
-        .map(|error| match error {
-            Error::SerializationFault => "Problem while serialization".to_string(),
-            Error::DeserializationFault => "Problem while deserialization".to_string(),
-        })
-        .collect();
-
-    let serialized_result = serde_json::to_vec(&serialized_errors)
-        .unwrap_or(b"Error occurs while serializing errors".to_vec());
-
-    Err(serialized_result)
+impl Error {
+    pub(crate) fn serialize(&self) -> ByteArray {
+        serde_json::to_vec(&self.to_string())
+            .unwrap_or(b"Error occurs while serializing error".to_vec())
+    }
 }

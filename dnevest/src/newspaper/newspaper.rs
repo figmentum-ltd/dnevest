@@ -67,7 +67,7 @@ fn published_on(date: Date, newspapers: &Vec<Newspaper>) -> Result<ByteArray, Se
         .map(|published_newspaper| QueryNewspaperDTO::from(published_newspaper))
         .collect();
 
-    serde_json::to_vec(&published_newspapers).map_err(|_| ServiceError::SerializationFault)
+    serde_json::to_vec(&published_newspapers).map_err(|err| ServiceError::SerializationFault(err))
 }
 
 fn deserialize_newspapers(serialized: Vec<ByteArray>) -> Result<Vec<Newspaper>, ServiceError> {
@@ -75,7 +75,7 @@ fn deserialize_newspapers(serialized: Vec<ByteArray>) -> Result<Vec<Newspaper>, 
         .into_iter()
         .map(|ser_newspaper| {
             serde_json::from_slice::<Newspaper>(&ser_newspaper)
-                .map_err(|_| ServiceError::DeserializationFault)
+                .map_err(|err| ServiceError::DeserializationFault(err))
         })
         .collect()
 }

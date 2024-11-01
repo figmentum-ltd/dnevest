@@ -9,16 +9,4 @@ pub(crate) enum Error {
     SignatureMismatch,
 }
 
-impl Error {
-    #[cfg(test)]
-    pub(crate) fn to_string(&self) -> String {
-        match self {
-            Error::DateParsing(err) => format!("[Newspaper] Error parsing date: {}", err),
-            Error::SignatureMismatch => {
-                "[Newspaper] Signature does not match the required pattern.".to_string()
-            }
-        }
-    }
-}
-
 pub(crate) type Result<T> = std::result::Result<T, Error>;

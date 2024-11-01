@@ -8,7 +8,7 @@ pub enum Event<'a> {
 }
 
 impl<'a> Event<'a> {
-    pub(crate) fn serialize_event(&self) -> Result<ByteArray, ServiceError> {
-        serde_json::to_vec(&self).map_err(|_| ServiceError::SerializationFault)
+    pub(crate) fn serialize(&self) -> Result<ByteArray, ServiceError> {
+        serde_json::to_vec(&self).map_err(|err| ServiceError::SerializationFault(err))
     }
 }

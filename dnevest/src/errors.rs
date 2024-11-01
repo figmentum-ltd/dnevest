@@ -9,10 +9,8 @@ pub(crate) enum Error {
 }
 
 impl Error {
-    pub(crate) fn to_byte_array(&self) -> ByteArray {
-        let error = match self {
-            Error::InvalidRequest(err) => format!("Invalid json in request: {}", err),
-        };
-        serde_json::to_vec(&error).unwrap_or(b"Error occurs while serializing errors".to_vec())
+    pub(crate) fn serialize(&self) -> ByteArray {
+        serde_json::to_vec(&self.to_string())
+            .unwrap_or(b"Error occurs while serializing error".to_vec())
     }
 }

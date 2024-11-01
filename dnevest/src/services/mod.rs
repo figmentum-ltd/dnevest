@@ -17,14 +17,14 @@ pub fn create_newspaper<H: HostImports>(
     host: &mut H,
     input: Newspaper,
 ) -> StdResult<bindings::Event, ByteArray> {
-    self::new_newspaper(host, input).or_else(|error| error::serialize_errors(vec![error]))
+    self::new_newspaper(host, input).map_err(|error| error.serialize())
 }
 
 pub fn newspapers_by_date<H: HostImports>(
     host: &mut H,
     date: Date,
 ) -> Result<ByteArray, ByteArray> {
-    newspaper::newspapers_by_date(host, date).or_else(|error| error::serialize_errors(vec![error]))
+    newspaper::newspapers_by_date(host, date).map_err(|error| error.serialize())
 }
 
 // TODO! - do we need 'newspaper' to pe present in every name
@@ -34,11 +34,11 @@ fn new_newspaper<H: HostImports>(
 ) -> StdResult<bindings::Event, ServiceError> {
     let signature = newspaper.identificator();
     let serialized_newspaper =
-        serde_json::to_vec(&newspaper).map_err(|_| ServiceError::SerializationFault)?;
+        serde_json::to_vec(&newspaper).map_err(|err| ServiceError::SerializationFault(err))?;
 
     host.persist(signature, &serialized_newspaper);
 
-    let serialized_event = Event::NewspaperCreated(signature).serialize_event()?;
+    let serialized_event = Event::NewspaperCreated(signature).serialize()?;
     Ok(bindings::Event {
         id: "dnevest_n_n".to_string(),
         content: serialized_event,
