@@ -1,0 +1,62 @@
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1645","name":"Стършел","start_year":1946,"end_year":null,"weekly_shedule":[false, false, false, false, true, false, false]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1602","name":"Работническо дело","start_year":1945,"end_year":1989,"weekly_shedule":[true, true, true, true, true, true, true]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1637","name":"Народна младеж","start_year":1945,"end_year":1989,"weekly_shedule":[true, true, true, true, true, true, true]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1633","name":"Литературен фронт","start_year":1945,"end_year":1993,"weekly_shedule":[false, false, false, true, false, false, false]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1612","name":"Труд","start_year":1946,"end_year":null,"weekly_shedule":[true, true, true, true, true, true, true]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"weekly_shedule":[false, false, false, false, false, true, false]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1616","name":"Народен спорт","start_year":1944,"end_year":1989,"weekly_shedule":[true, false, false, true, false, true, false]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В5056","name":"Дума","start_year":1990,"end_year":1998,"weekly_shedule":[true, true, true, true, true, true, true]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В5057","name":"Демокрация","start_year":1990,"end_year":2002,"weekly_shedule":[true, true, true, true, true, true, true]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1708","name":"Вечерни новини","start_year":1952,"end_year":1992,"weekly_shedule":[true, true, true, true, true, true, true]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В5499","name":"Стандарт","start_year":1992,"end_year":null,"weekly_shedule":[true, true, true, true, true, true, true]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1905","name":"Поглед","start_year":1966,"end_year":1996,"weekly_shedule":[true, false, false, false, false, false, false]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1621","name":"Отечествен глас","start_year":1960,"end_year":1989,"weekly_shedule":[true, true, true, true, true, true, true]}}}'
+
+curl -X POST http://localhost:8080/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1601","name":"Отечествен фронт","start_year":1945,"end_year":1989,"weekly_shedule":[false, true, true, true, true, true, true]}}}'
+
+
+
+-------- Example GET request --------
+curl -X GET ec2-user@ec2-3-79-24-152.eu-central-1.compute.amazonaws.com/query/dnevest \
+    -H "Content-Type: application/json" \
+    -d '{"NewspapersByDate":{"date":"14-07-1989"}}'
