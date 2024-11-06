@@ -43,6 +43,8 @@ curl -k -X POST https://3.79.24.152/execute/dnevest \
 {"offset_bytes":3451}
 ```
 
+
+
 ### • Find newspapers by date
 To find newspapers published on a specific date, provide the date of interest in JSON format.
 
