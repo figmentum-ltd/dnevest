@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub(crate) struct WeeklyFrequency([bool; 7]);
 
 impl WeeklyFrequency {
+    #[cfg(test)]
     pub(crate) fn new(days: [bool; 7]) -> Self {
         Self(days)
     }

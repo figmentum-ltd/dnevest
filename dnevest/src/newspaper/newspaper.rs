@@ -15,6 +15,7 @@ pub(crate) struct Newspaper {
 }
 
 impl Newspaper {
+    #[cfg(test)]
     pub(crate) fn new(
         signature: Signature,
         name: String,
@@ -32,7 +33,7 @@ impl Newspaper {
     }
 
     pub(crate) fn identificator(&self) -> &str {
-        &self.signature.signature()
+        self.signature.signature()
     }
 
     fn published_on(&self, day_index: usize, year: Year) -> bool {
@@ -57,17 +58,17 @@ pub(crate) fn newspapers_by_date<H: HostImports>(
         .and_then(|newspapers| self::published_on(date, &newspapers))
 }
 
-fn published_on(date: Date, newspapers: &Vec<Newspaper>) -> Result<ByteArray, ServiceError> {
+fn published_on(date: Date, newspapers: &[Newspaper]) -> Result<ByteArray, ServiceError> {
     let year = date.year();
     let day = (date.day_of_week().number_from_monday() - 1) as usize;
 
     let published_newspapers: Vec<QueryNewspaperDTO> = newspapers
-        .into_iter()
+        .iter()
         .filter(|newspaper| newspaper.published_on(day, year))
-        .map(|published_newspaper| QueryNewspaperDTO::from(published_newspaper))
+        .map(QueryNewspaperDTO::from)
         .collect();
 
-    serde_json::to_vec(&published_newspapers).map_err(|err| ServiceError::SerializationFault(err))
+    serde_json::to_vec(&published_newspapers).map_err(ServiceError::SerializationFault)
 }
 
 fn deserialize_newspapers(serialized: Vec<ByteArray>) -> Result<Vec<Newspaper>, ServiceError> {
@@ -75,7 +76,7 @@ fn deserialize_newspapers(serialized: Vec<ByteArray>) -> Result<Vec<Newspaper>, 
         .into_iter()
         .map(|ser_newspaper| {
             serde_json::from_slice::<Newspaper>(&ser_newspaper)
-                .map_err(|err| ServiceError::DeserializationFault(err))
+                .map_err(ServiceError::DeserializationFault)
         })
         .collect()
 }
@@ -127,7 +128,7 @@ mod tests {
 
     #[test]
     fn newspapers_by_date() {
-        let mut host = MockHost::new();
+        let mut host = MockHost::with_newspapers();
 
         //05.07.1987 was a sunday
         let publicated_1 = publicized_on(5, 7, 1987, &mut host);
@@ -137,8 +138,8 @@ mod tests {
         //14.07.1990 was a saturday
         let publicated_2 = publicized_on(14, 7, 1990, &mut host);
         let expected_2 = vec![
-            QueryNewspaperDTO::new("В4667", "Орбита"),
             QueryNewspaperDTO::new("В1612", "Труд"),
+            QueryNewspaperDTO::new("В4667", "Орбита"),
         ];
         assert_eq!(publicated_2, expected_2);
     }

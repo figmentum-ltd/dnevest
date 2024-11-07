@@ -10,8 +10,7 @@ use super::error::{Error, Result};
 pub(crate) struct Signature(String);
 
 impl Signature {
-    // TODO! Become active when load_newspapers starts making requests to the platform
-    // #[cfg(test)]
+    #[cfg(test)]
     pub(crate) fn new(signature: &str) -> Self {
         Self(signature.to_string())
     }
@@ -27,7 +26,7 @@ impl Signature {
         // the character 'B' in cyrillic takes 2 bytes, so the signature length is 6
         if sign.len() == 6
             && chars.next() == Some('В')
-            && chars.take(4).all(|c| c.is_digit(10))
+            && chars.take(4).all(|c| c.is_ascii_digit())
             && !sign.ends_with("0000")
         {
             Ok(())

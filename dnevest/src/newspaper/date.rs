@@ -17,9 +17,9 @@ pub(crate) struct Date(NaiveDate);
 
 impl Date {
     pub(super) fn try_new(date: &str) -> Result<Self> {
-        NaiveDate::parse_from_str(&date, FORMAT)
-            .map_err(|err| Error::DateParsing(err))
-            .map(|date| Date(date))
+        NaiveDate::parse_from_str(date, FORMAT)
+            .map_err(Error::DateParsing)
+            .map(Date)
     }
 
     pub(super) fn day_of_week(&self) -> Weekday {
@@ -61,7 +61,7 @@ mod test_parse {
     #[test]
     fn valid_date() {
         let res = Date::try_new("29-02-2024").unwrap();
-        let expected = Date::new(29, 02, 2024);
+        let expected = Date::new(29, 2, 2024);
 
         assert_eq!(res, expected);
     }

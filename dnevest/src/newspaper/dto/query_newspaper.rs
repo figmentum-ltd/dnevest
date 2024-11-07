@@ -1,4 +1,7 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+
+#[cfg(test)]
+use serde::Deserialize;
 
 #[derive(Serialize)]
 #[cfg_attr(test, derive(Debug, PartialEq, Deserialize))]
