@@ -29,7 +29,7 @@ mod test_deserialization {
 
     use crate::{
         bindings::ByteArray,
-        newspaper::{Date, Newspaper, Signature, WeeklyFrequency},
+        newspaper::{Date, Newspaper},
     };
 
     use super::{ExecuteMsg, QueryMsg};
@@ -37,12 +37,12 @@ mod test_deserialization {
     #[test]
     fn valid_execute_msg() {
         let msg = r#"{"CreateNewspaper":{"input":{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"weekly_shedule":[false,false,false,false,false,true,false]}}}"#;
-        let newspaper = Newspaper::new(
-            Signature::new("В4667"),
-            "Орбита".to_string(),
+        let newspaper = Newspaper::new_unchecked(
+            "В4667",
+            "Орбита",
             1969,
             Some(1991),
-            WeeklyFrequency::new([false, false, false, false, false, true, false]),
+            [false, false, false, false, false, true, false],
         );
         let expected = ExecuteMsg::CreateNewspaper { input: newspaper };
         let res = super::deserialize_msg::<ExecuteMsg>(msg.into()).expect("deserialization failed");

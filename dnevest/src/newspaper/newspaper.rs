@@ -1,34 +1,42 @@
+use chrono::{Datelike, Utc};
 use serde::{Deserialize, Serialize};
+use std::result;
 
 use crate::{bindings::ByteArray, services::ServiceError, HostImports};
 
-use super::{dto::QueryNewspaperDTO, frequency::WeeklyFrequency, signature::Signature, Date, Year};
+use super::{
+    dto::QueryNewspaperDTO,
+    error::{Error, Result},
+    frequency::WeeklyFrequency,
+    signature::Signature,
+    Date, Year,
+};
 
-#[derive(Serialize, Deserialize)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
+#[derive(Serialize, Deserialize)]
 pub(crate) struct Newspaper {
     signature: Signature,
     name: String,
     start_year: Year,
     end_year: Option<Year>,
-    weekly_shedule: WeeklyFrequency,
+    weekly_schedule: WeeklyFrequency,
 }
 
 impl Newspaper {
     #[cfg(test)]
-    pub(crate) fn new(
-        signature: Signature,
-        name: String,
+    pub(crate) fn new_unchecked(
+        signature: &str,
+        name: &str,
         start_year: Year,
         end_year: Option<Year>,
-        published_on: WeeklyFrequency,
+        publicated_on: [bool; 7],
     ) -> Self {
         Self {
-            signature,
-            name,
+            signature: Signature::new(signature),
+            name: name.to_string(),
             start_year,
             end_year,
-            weekly_shedule: published_on,
+            weekly_schedule: WeeklyFrequency::new(publicated_on),
         }
     }
 
@@ -36,13 +44,30 @@ impl Newspaper {
         self.signature.signature()
     }
 
+    fn invariant_held(&self) -> Result<()> {
+        let current_year: Year = Utc::now()
+            .year()
+            .try_into()
+            .expect("Year must be a positive number");
+
+        (self.start_year > current_year)
+            .then(|| Err(Error::InvalidYear("start_year cannot be in the future")))
+            .unwrap_or({
+                self.end_year
+                    .filter(|end| self.start_year > *end)
+                    .map(|_| Err(Error::InvalidYear("start_year cannot be after end_year")))
+                    .unwrap_or(Ok(()))
+            })
+    }
+
     fn published_on(&self, day_index: usize, year: Year) -> bool {
         self.start_year <= year
             && self.end_year.map_or(true, |end| end >= year)
-            && self.weekly_shedule.published_on(day_index)
+            && self.weekly_schedule.published_on(day_index)
     }
 }
 
+// TODO use the Newspaper by Value
 impl From<&Newspaper> for QueryNewspaperDTO {
     fn from(value: &Newspaper) -> Self {
         Self::new(value.identificator(), &value.name)
@@ -52,13 +77,17 @@ impl From<&Newspaper> for QueryNewspaperDTO {
 pub(crate) fn newspapers_by_date<H: HostImports>(
     host: &mut H,
     date: Date,
-) -> Result<ByteArray, ServiceError> {
+) -> result::Result<ByteArray, ServiceError> {
+    // TODO remove char constant duplication + 'Г derived from 'B'
     let ser_newspapers = host.retrieve_range("В", "Г");
     self::deserialize_newspapers(ser_newspapers)
         .and_then(|newspapers| self::published_on(date, &newspapers))
 }
 
-fn published_on(date: Date, newspapers: &[Newspaper]) -> Result<ByteArray, ServiceError> {
+// TODO eliminate the intermediately collected newspapers
+// TODO pass newspapers by value not by ref
+// TODO don't depend on external error module
+fn published_on(date: Date, newspapers: &[Newspaper]) -> result::Result<ByteArray, ServiceError> {
     let year = date.year();
     let day = (date.day_of_week().number_from_monday() - 1) as usize;
 
@@ -71,7 +100,9 @@ fn published_on(date: Date, newspapers: &[Newspaper]) -> Result<ByteArray, Servi
     serde_json::to_vec(&published_newspapers).map_err(ServiceError::SerializationFault)
 }
 
-fn deserialize_newspapers(serialized: Vec<ByteArray>) -> Result<Vec<Newspaper>, ServiceError> {
+fn deserialize_newspapers(
+    serialized: Vec<ByteArray>,
+) -> result::Result<Vec<Newspaper>, ServiceError> {
     serialized
         .into_iter()
         .map(|ser_newspaper| {
@@ -84,7 +115,7 @@ fn deserialize_newspapers(serialized: Vec<ByteArray>) -> Result<Vec<Newspaper>, 
 #[cfg(test)]
 mod tests {
     use crate::{
-        newspaper::{Date, QueryNewspaperDTO, Signature, WeeklyFrequency, Year},
+        newspaper::{Date, QueryNewspaperDTO, Year},
         services::MockHost,
         HostImports,
     };
@@ -93,13 +124,12 @@ mod tests {
 
     #[test]
     fn serialize() {
-        let weekly_shedule = WeeklyFrequency::new([false, false, false, false, false, true, false]);
-        let newspaper = Newspaper::new(
-            Signature::new("В4667"),
-            "Орбита".to_string(),
+        let newspaper = Newspaper::new_unchecked(
+            "В4667",
+            "Орбита",
             1969,
             Some(1991),
-            weekly_shedule,
+            [false, false, false, false, false, true, false],
         );
         let serialized = serde_json::to_string(&newspaper).unwrap();
 
@@ -115,12 +145,12 @@ mod tests {
 
         let deserialized: Newspaper =
             serde_json::from_str(json).expect("Failed to deserialize JSON");
-        let expected_dto = Newspaper::new(
-            Signature::new("В1612"),
-            "Труд".to_string(),
+        let expected_dto = Newspaper::new_unchecked(
+            "В1612",
+            "Труд",
             1946,
             None,
-            WeeklyFrequency::new([true, true, true, true, true, true, true]),
+            [true, true, true, true, true, true, true],
         );
 
         assert_eq!(expected_dto, deserialized);

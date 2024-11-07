@@ -2,11 +2,7 @@
 use std::collections::HashMap;
 
 #[cfg(test)]
-use crate::{
-    bindings::ByteArray,
-    newspaper::{Signature, WeeklyFrequency},
-    HostImports,
-};
+use crate::{bindings::ByteArray, HostImports};
 
 #[cfg(test)]
 use super::Newspaper;
@@ -35,26 +31,26 @@ impl MockHost {
 
     fn load_newspapers() -> Vec<Newspaper> {
         vec![
-            Newspaper::new(
-                Signature::new("В4667"),
-                "Орбита".to_string(),
+            Newspaper::new_unchecked(
+                "В4667",
+                "Орбита",
                 1969,
                 Some(1991),
-                WeeklyFrequency::new([false, false, false, false, false, true, false]),
+                [false, false, false, false, false, true, false],
             ),
-            Newspaper::new(
-                Signature::new("В1616"),
-                "Народен спор".to_string(),
+            Newspaper::new_unchecked(
+                "В1616",
+                "Народен спор",
                 1944,
                 Some(1989),
-                WeeklyFrequency::new([true, false, false, true, false, true, false]),
+                [true, false, false, true, false, true, false],
             ),
-            Newspaper::new(
-                Signature::new("В1612"),
-                "Труд".to_string(),
+            Newspaper::new_unchecked(
+                "В1612",
+                "Труд",
                 1946,
                 None,
-                WeeklyFrequency::new([true, true, true, true, true, true, true]),
+                [true, true, true, true, true, true, true],
             ),
         ]
     }

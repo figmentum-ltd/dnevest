@@ -54,7 +54,7 @@ fn new_newspaper<H: HostImports>(
 mod tests {
     use crate::{
         bindings,
-        newspaper::{Newspaper, Signature, WeeklyFrequency},
+        newspaper::Newspaper,
         services::{MockHost, ServiceError},
     };
 
@@ -82,12 +82,12 @@ mod tests {
     }
 
     fn newspaper() -> Newspaper {
-        Newspaper::new(
-            Signature::new("В1905"),
-            "Поглед".to_string(),
+        Newspaper::new_unchecked(
+            "В1905",
+            "Поглед",
             1966,
             Some(1996),
-            WeeklyFrequency::new([true, false, false, false, false, false, false]),
+            [true, false, false, false, false, false, false],
         )
     }
 
