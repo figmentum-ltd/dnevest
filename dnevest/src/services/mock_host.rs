@@ -1,17 +1,22 @@
+#[cfg(test)]
 use std::collections::HashMap;
 
+#[cfg(test)]
 use crate::{
     bindings::ByteArray,
     newspaper::{Signature, WeeklyFrequency},
     HostImports,
 };
 
+#[cfg(test)]
 use super::Newspaper;
 
+#[cfg(test)]
 pub(crate) struct MockHost {
     store: HashMap<String, ByteArray>,
 }
 
+#[cfg(test)]
 impl MockHost {
     pub(crate) fn new() -> Self {
         Self {
@@ -19,8 +24,17 @@ impl MockHost {
         }
     }
 
-    fn load_newspapers() -> Vec<ByteArray> {
-        let newspapers = vec![
+    pub(crate) fn with_newspapers() -> Self {
+        let mut host = Self::new();
+        Self::load_newspapers().into_iter().for_each(|newspaper| {
+            let serialized = serde_json::to_vec(&newspaper).expect("Failed to serialize Newspaper");
+            host.persist(newspaper.identificator(), &serialized);
+        });
+        host
+    }
+
+    fn load_newspapers() -> Vec<Newspaper> {
+        vec![
             Newspaper::new(
                 Signature::new("В4667"),
                 "Орбита".to_string(),
@@ -42,20 +56,21 @@ impl MockHost {
                 None,
                 WeeklyFrequency::new([true, true, true, true, true, true, true]),
             ),
-        ];
-        newspapers
-            .into_iter()
-            .map(|newspaper| serde_json::to_vec(&newspaper).expect("Failed to serialize Newspaper"))
-            .collect()
+        ]
     }
 }
 
+#[cfg(test)]
 impl HostImports for MockHost {
     fn persist(&mut self, key: &str, req: &ByteArray) {
         self.store.insert(key.to_string(), req.clone());
     }
 
+    fn retrieve(&mut self, key: &str) -> Option<ByteArray> {
+        self.store.get(key).cloned()
+    }
+
     fn retrieve_range(&mut self, _start: &str, _end: &str) -> Vec<ByteArray> {
-        MockHost::load_newspapers()
+        self.store.values().cloned().collect()
     }
 }

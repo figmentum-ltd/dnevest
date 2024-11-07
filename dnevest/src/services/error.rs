@@ -9,6 +9,9 @@ pub enum Error {
 
     #[error("Problem while deserialization: {0}")]
     DeserializationFault(serde_json::Error),
+
+    #[error("Cannot create the newspaper because this signature already exists")]
+    DuplicateSignature,
 }
 
 impl Error {

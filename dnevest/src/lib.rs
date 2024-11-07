@@ -34,12 +34,18 @@ impl Guest for Component {
 trait HostImports {
     fn persist(&mut self, key: &str, req: &ByteArray);
 
+    fn retrieve(&mut self, key: &str) -> Option<ByteArray>;
+
     fn retrieve_range(&mut self, start: &str, end: &str) -> Vec<ByteArray>;
 }
 
 impl HostImports for Component {
     fn persist(&mut self, key: &str, req: &ByteArray) {
         bindings::persist(key, req)
+    }
+
+    fn retrieve(&mut self, key: &str) -> Option<ByteArray> {
+        bindings::retrieve(key)
     }
 
     fn retrieve_range(&mut self, start: &str, end: &str) -> Vec<ByteArray> {

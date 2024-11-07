@@ -11,6 +11,7 @@ mod error;
 mod mock_host;
 
 pub(super) use error::Error as ServiceError;
+#[cfg(test)]
 pub(crate) use mock_host::MockHost;
 
 pub fn create_newspaper<H: HostImports>(
@@ -23,7 +24,7 @@ pub fn create_newspaper<H: HostImports>(
 pub fn newspapers_by_date<H: HostImports>(
     host: &mut H,
     date: Date,
-) -> Result<ByteArray, ByteArray> {
+) -> StdResult<ByteArray, ByteArray> {
     newspaper::newspapers_by_date(host, date).map_err(|error| error.serialize())
 }
 
@@ -33,37 +34,64 @@ fn new_newspaper<H: HostImports>(
     newspaper: Newspaper,
 ) -> StdResult<bindings::Event, ServiceError> {
     let signature = newspaper.identificator();
-    let serialized_newspaper =
-        serde_json::to_vec(&newspaper).map_err(|err| ServiceError::SerializationFault(err))?;
+    host.retrieve(signature)
+        .map(|_| Err(ServiceError::DuplicateSignature))
+        .unwrap_or({
+            let serialized_newspaper =
+                serde_json::to_vec(&newspaper).map_err(ServiceError::SerializationFault)?;
 
-    host.persist(signature, &serialized_newspaper);
+            host.persist(signature, &serialized_newspaper);
 
-    let serialized_event = Event::NewspaperCreated(signature).serialize()?;
-    Ok(bindings::Event {
-        id: "dnevest_n_n".to_string(),
-        content: serialized_event,
-    })
+            let serialized_event = Event::NewspaperCreated(signature).serialize()?;
+            Ok(bindings::Event {
+                id: "dnevest_n_n".to_string(),
+                content: serialized_event,
+            })
+        })
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
+        bindings,
         newspaper::{Newspaper, Signature, WeeklyFrequency},
-        services::MockHost,
+        services::{MockHost, ServiceError},
     };
 
     #[test]
     fn create() {
         let mut host = MockHost::new();
-        let newspaper = Newspaper::new(
-            Signature::new("В4667"),
-            "Орбита".to_string(),
-            1969,
-            Some(1991),
-            WeeklyFrequency::new([false, false, false, false, false, true, false]),
-        );
+        let newspaper = newspaper();
 
         let res = super::create_newspaper(&mut host, newspaper);
-        assert_eq!((&res.unwrap()).id, "dnevest_n_n".to_string());
+        assert_eq!((res.unwrap()).id, "dnevest_n_n".to_string());
+    }
+
+    #[test]
+    fn dublicate_signature() {
+        let mut host = MockHost::new();
+
+        let res = super::new_newspaper(&mut host, newspaper());
+        assert_eq!((res.unwrap()).id, "dnevest_n_n".to_string());
+
+        let err = super::new_newspaper(&mut host, newspaper());
+        assert_err(
+            err,
+            "Cannot create the newspaper because this signature already exists",
+        );
+    }
+
+    fn newspaper() -> Newspaper {
+        Newspaper::new(
+            Signature::new("В1905"),
+            "Поглед".to_string(),
+            1966,
+            Some(1996),
+            WeeklyFrequency::new([true, false, false, false, false, false, false]),
+        )
+    }
+
+    fn assert_err(r: Result<bindings::Event, ServiceError>, msg: &str) {
+        assert!(r.expect_err("expected an error").to_string().contains(msg))
     }
 }
