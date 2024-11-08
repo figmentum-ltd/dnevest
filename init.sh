@@ -12,7 +12,7 @@ create_newspaper() {
 
   curl -k -X POST "$SERVER_DIR" \
     -H "Content-Type: $CONTENT_TYPE" \
-    -d "{\"CreateNewspaper\":{\"input\":{\"signature\":\"$signature\",\"name\":\"$name\",\"start_year\":$start_year,\"end_year\":$end_year,\"weekly_shedule\":$weekly_schedule}}}"
+    -d "{\"CreateNewspaper\":{\"input\":{\"signature\":\"$signature\",\"name\":\"$name\",\"start_year\":$start_year,\"end_year\":$end_year,\"weekly_schedule\":$weekly_schedule}}}"
 }
 
 create_newspaper "В1645" "Стършел" 1946 null "[false, false, false, false, true, false, false]"

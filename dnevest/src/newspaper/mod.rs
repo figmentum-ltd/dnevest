@@ -6,6 +6,7 @@ mod newspaper;
 mod signature;
 
 pub(crate) use date::Date;
+pub(crate) use error::Error;
 pub(super) use newspaper::{newspapers_by_date, Newspaper};
 
 #[cfg(test)]

@@ -11,11 +11,13 @@ pub struct QueryNewspaperDTO {
 }
 
 impl QueryNewspaperDTO {
-    pub(crate) fn new(signature: &str, name: &str) -> Self {
-        Self {
-            signature: signature.to_string(),
-            name: name.to_string(),
-        }
+    pub(crate) fn new(signature: String, name: String) -> Self {
+        Self { signature, name }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn new_test(signature: &str, name: &str) -> Self {
+        Self::new(signature.to_string(), name.to_string())
     }
 }
 
@@ -26,7 +28,7 @@ mod tests {
 
     #[test]
     fn valid_serialize() {
-        let newspaper = QueryNewspaperDTO::new("B1645", "Стършел");
+        let newspaper = QueryNewspaperDTO::new_test("B1645", "Стършел");
         let serialized = to_string(&newspaper).expect("Failed to serialize");
 
         let expected_json = r#"{"signature":"B1645","name":"Стършел"}"#;

@@ -1,17 +1,17 @@
 use thiserror::Error;
 
-use crate::bindings::ByteArray;
+use crate::{bindings::ByteArray, newspaper};
 
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Problem while serialization: {0}")]
     SerializationFault(serde_json::Error),
 
-    #[error("Problem while deserialization: {0}")]
-    DeserializationFault(serde_json::Error),
-
     #[error("Cannot create the newspaper because this signature already exists")]
     DuplicateSignature,
+
+    #[error("Newspaper domain error: {0}")]
+    DomainError(#[from] newspaper::Error),
 }
 
 impl Error {

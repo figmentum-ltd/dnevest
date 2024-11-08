@@ -36,7 +36,7 @@ mod test_deserialization {
 
     #[test]
     fn valid_execute_msg() {
-        let msg = r#"{"CreateNewspaper":{"input":{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"weekly_shedule":[false,false,false,false,false,true,false]}}}"#;
+        let msg = r#"{"CreateNewspaper":{"input":{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"weekly_schedule":[false,false,false,false,false,true,false]}}}"#;
         let newspaper = Newspaper::new_unchecked(
             "В4667",
             "Орбита",
@@ -54,13 +54,13 @@ mod test_deserialization {
     fn invalid_json() {
         let error_msgs = "Invalid json in request";
 
-        let missing_field = r#"{"CreateNewspaper":{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"weekly_shedule":[false,false,false,false,false,true,false]}}"#;
+        let missing_field = r#"{"CreateNewspaper":{"signature":"В4667","name":"Орбита","start_year":1969,"end_year":1991,"weekly_schedule":[false,false,false,false,false,true,false]}}"#;
         assert_err(
             super::deserialize_msg::<ExecuteMsg>(missing_field.into()),
             error_msgs,
         );
 
-        let missing_start_year = r#"{"CreateNewspaper":{"input":{"signature":"В4667","name":"Орбита","start_year":,"end_year":null,"weekly_shedule":[false,false,false,false,false,true,false]}}}"#;
+        let missing_start_year = r#"{"CreateNewspaper":{"input":{"signature":"В4667","name":"Орбита","start_year":,"end_year":null,"weekly_schedule":[false,false,false,false,false,true,false]}}}"#;
         assert_err(
             super::deserialize_msg::<ExecuteMsg>(missing_start_year.into()),
             error_msgs,
@@ -70,6 +70,21 @@ mod test_deserialization {
         assert_err(
             super::deserialize_msg::<QueryMsg>(missing_enum_variant.into()),
             error_msgs,
+        );
+    }
+
+    #[test]
+    fn invalid_newspaper() {
+        let start_in_future = r#"{"CreateNewspaper":{"input":{"signature":"В4667","name":"Орбита","start_year":2100,"end_year":null,"weekly_schedule":[false,false,false,false,false,true,false]}}}"#;
+        assert_err(
+            super::deserialize_msg::<ExecuteMsg>(start_in_future.into()),
+            "start_year cannot be in the future",
+        );
+
+        let end_before_start = r#"{"CreateNewspaper":{"input":{"signature":"В4667","name":"Орбита","start_year":1991,"end_year":1969,"weekly_schedule":[false,false,false,false,false,true,false]}}}"#;
+        assert_err(
+            super::deserialize_msg::<ExecuteMsg>(end_before_start.into()),
+            "start_year cannot be after end_year",
         );
     }
 
@@ -86,9 +101,9 @@ mod test_deserialization {
 
     fn assert_err<T: Debug>(r: Result<T, ByteArray>, msg: &str) {
         assert!(r.is_err());
-
         let err =
             serde_json::from_slice::<String>(&r.unwrap_err()).expect("deserialization failed");
+
         assert!(err.contains(msg))
     }
 }

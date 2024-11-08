@@ -25,7 +25,8 @@ pub fn newspapers_by_date<H: HostImports>(
     host: &mut H,
     date: Date,
 ) -> StdResult<ByteArray, ByteArray> {
-    newspaper::newspapers_by_date(host, date).map_err(|error| error.serialize())
+    newspaper::newspapers_by_date(host, date)
+        .map_err(|error| ServiceError::DomainError(error).serialize())
 }
 
 // TODO! - do we need 'newspaper' to pe present in every name

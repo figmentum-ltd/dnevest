@@ -17,7 +17,7 @@ When sending the data, use the following JSON format. Note:
       "name": "Стършел",
       "start_year": 1946,
       "end_year": null,
-      "weekly_shedule": [
+      "weekly_schedule": [
         false,
         false,
         false,
@@ -35,7 +35,7 @@ When sending the data, use the following JSON format. Note:
 ```sh
 curl -k -X POST https://3.79.24.152/execute/dnevest \
  	-H "Content-Type: application/json" \
- 	-d '{"CreateNewspaper":{"input":{"signature":"В1645","name":"Стършел","start_year":1946,"end_year":null,"weekly_shedule":[false, false, false, false, true, false, false]}}}'
+ 	-d '{"CreateNewspaper":{"input":{"signature":"В1645","name":"Стършел","start_year":1946,"end_year":null,"weekly_schedule":[false, false, false, false, true, false, false]}}}'
 ```
 
 #### Example response
