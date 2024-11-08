@@ -4,7 +4,7 @@ use serde::Serialize;
 use serde::Deserialize;
 
 #[derive(Serialize)]
-#[cfg_attr(test, derive(Debug, PartialEq, Deserialize))]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq, Hash, Deserialize))]
 pub struct QueryNewspaperDTO {
     signature: String,
     name: String,

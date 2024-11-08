@@ -8,7 +8,7 @@ use super::{
     dto::QueryNewspaperDTO,
     error::{Error, Result},
     frequency::WeeklyFrequency,
-    signature::Signature,
+    signature::{self, Signature},
     Date, Year,
 };
 
@@ -104,9 +104,11 @@ pub(crate) fn newspapers_by_date<H: HostImports>(host: &mut H, date: Date) -> Re
     let year = date.year();
     let day = (date.day_of_week().number_from_monday() - 1) as usize;
 
-    // TODO remove char constant duplication + 'Г derived from 'B'
     let published_newspapers: Vec<QueryNewspaperDTO> = host
-        .retrieve_range("В", "Г")
+        .retrieve_range(
+            &signature::SIGN.to_string(),
+            &signature::next_letter(signature::SIGN).to_string(),
+        )
         .into_iter()
         .filter_map(|ser_newspaper| {
             serde_json::from_slice::<Newspaper>(&ser_newspaper)
@@ -121,6 +123,8 @@ pub(crate) fn newspapers_by_date<H: HostImports>(host: &mut H, date: Date) -> Re
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use crate::{
         newspaper::{Date, QueryNewspaperDTO, Year},
         services::MockHost,
@@ -170,7 +174,7 @@ mod tests {
         //05.07.1987 was a sunday
         let publicated_1 = publicized_on(5, 7, 1987, &mut host);
         let expected_1 = vec![QueryNewspaperDTO::new_test("В1612", "Труд")];
-        assert_eq!(publicated_1, expected_1);
+        assert_publication_eq(publicated_1, expected_1);
 
         //14.07.1990 was a saturday
         let publicated_2 = publicized_on(14, 7, 1990, &mut host);
@@ -178,7 +182,17 @@ mod tests {
             QueryNewspaperDTO::new_test("В1612", "Труд"),
             QueryNewspaperDTO::new_test("В4667", "Орбита"),
         ];
-        assert_eq!(publicated_2, expected_2);
+        assert_publication_eq(publicated_2, expected_2);
+        assert_publication_eq(
+            vec![
+                QueryNewspaperDTO::new_test("В4667", "Орбита"),
+                QueryNewspaperDTO::new_test("В1612", "Труд"),
+            ],
+            vec![
+                QueryNewspaperDTO::new_test("В1612", "Труд"),
+                QueryNewspaperDTO::new_test("В4667", "Орбита"),
+            ],
+        );
     }
 
     fn publicized_on<H: HostImports>(
@@ -191,6 +205,12 @@ mod tests {
             .expect("Failed to retrieve newspapers published on the specified date");
         serde_json::from_slice(&res)
             .expect("Failed to deserialize the published newspapers from the result")
+    }
+
+    fn assert_publication_eq(publicated: Vec<QueryNewspaperDTO>, expected: Vec<QueryNewspaperDTO>) {
+        let publicated_set: HashSet<QueryNewspaperDTO> = publicated.into_iter().collect();
+        let expected_set: HashSet<QueryNewspaperDTO> = expected.into_iter().collect();
+        assert_eq!(publicated_set, expected_set);
     }
 }
 

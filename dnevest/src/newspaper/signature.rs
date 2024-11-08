@@ -3,6 +3,8 @@ use std::result;
 
 use super::error::{Error, Result};
 
+pub(crate) const SIGN: char = 'В';
+
 /// Brings invariant checking as a step in deserializing a Newspaper
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Serialize, Deserialize)]
@@ -25,7 +27,7 @@ impl Signature {
 
         // the character 'B' in cyrillic takes 2 bytes, so the signature length is 6
         if sign.len() == 6
-            && chars.next() == Some('В')
+            && chars.next() == Some(SIGN)
             && chars.take(4).all(|c| c.is_ascii_digit())
             && !sign.ends_with("0000")
         {
@@ -43,6 +45,13 @@ impl TryFrom<String> for Signature {
         let obj = Signature(value);
         obj.invariant_held().map(|()| obj)
     }
+}
+
+pub(crate) fn next_letter(c: char) -> char {
+    u32::try_from(c)
+        .ok()
+        .and_then(|val| char::try_from(val + 1).ok())
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -83,6 +92,13 @@ mod test_invariant {
         let serialized = serde_json::to_string(&signature).unwrap();
 
         assert_eq!(serialized, r#""В3452""#)
+    }
+
+    #[test]
+    fn next_letter() {
+        assert_eq!(super::next_letter('В'), 'Г');
+        assert_eq!(super::next_letter('B'), 'C');
+        assert_ne!(super::next_letter('B'), 'Г')
     }
 
     fn new(sign: &str) -> Result<Signature> {
