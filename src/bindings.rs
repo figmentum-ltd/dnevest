@@ -303,7 +303,7 @@ macro_rules! __export_example_impl {
 #[doc(inline)]
 pub(crate) use __export_example_impl as export;
 #[cfg(target_arch = "wasm32")]
-#[link_section = "component-type:wit-bindgen:0.31.0:component:dnevest:example:encoded world"]
+#[link_section = "component-type:wit-bindgen:0.30.0:example:encoded world"]
 #[doc(hidden)]
 pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 354] = *b"\
 \0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xe4\x01\x01A\x02\x01\
@@ -314,7 +314,7 @@ ends\0\x07\x03\0\x0eretrieve-range\x01\x08\x01j\x01\x03\x01\x01\x01@\x01\x03cmd\
 \0\x09\x04\0\x07execute\x01\x0a\x01j\x01\x01\x01\x01\x01@\x01\x03req\x01\0\x0b\x04\
 \0\x05query\x01\x0c\x04\x01\x19component:dnevest/example\x04\0\x0b\x0d\x01\0\x07\
 example\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.21\
-6.0\x10wit-bindgen-rust\x060.31.0";
+5.0\x10wit-bindgen-rust\x060.30.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

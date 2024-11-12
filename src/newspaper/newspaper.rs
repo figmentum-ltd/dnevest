@@ -46,10 +46,9 @@ impl Newspaper {
     }
 
     fn invariant_held(&self) -> Result<()> {
-        let current_year: Year = Utc::now()
-            .year()
-            .try_into()
-            .expect("Year must be a positive number");
+        // TODO!- find a way to get current year without using std
+        // old: let current_year: Year = Utc::now().year(); -> where ::now requires std
+        let current_year: Year = 2024;
 
         (self.start_year > current_year)
             .then_some(Err(Error::InvalidYear(
