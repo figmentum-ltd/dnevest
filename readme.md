@@ -63,7 +63,7 @@ When specifying the date, use the following JSON format. Note:
 
 #### Example request
 ```sh
-curl -k -X GET https://3.79.24.152/execute/dnevest \
+curl -k -X GET https://3.79.24.152/query/dnevest \
  	-H "Content-Type: application/json" \
  	-d '{"NewspapersByDate":{"date":"16-08-2024"}}'
 ```
