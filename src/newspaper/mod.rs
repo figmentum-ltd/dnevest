@@ -16,4 +16,4 @@ pub(super) use frequency::WeeklyFrequency;
 #[cfg(test)]
 pub(super) use signature::Signature;
 
-type Year = u32;
+pub(crate) type Year = u32;

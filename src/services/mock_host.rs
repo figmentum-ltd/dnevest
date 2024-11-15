@@ -2,10 +2,21 @@
 use std::collections::HashMap;
 
 #[cfg(test)]
-use crate::{bindings::ByteArray, HostImports};
+use crate::{
+    bindings::{component::dnevest::time::Clock, ByteArray},
+    Storage,
+};
 
 #[cfg(test)]
 use super::Newspaper;
+
+#[cfg(test)]
+pub(crate) const CURRENT_YEAR: crate::newspaper::Year = 2024;
+
+#[cfg(test)]
+pub(crate) fn current_year() -> Clock {
+    Clock { year: CURRENT_YEAR }
+}
 
 #[cfg(test)]
 pub(crate) struct MockHost {
@@ -57,7 +68,7 @@ impl MockHost {
 }
 
 #[cfg(test)]
-impl HostImports for MockHost {
+impl Storage for MockHost {
     fn persist(&mut self, key: &str, req: &ByteArray) {
         self.store.insert(key.to_string(), req.clone());
     }
