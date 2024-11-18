@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVER_DIR="https://3.79.24.152/execute/dnevest"
+SERVER_DIR="https://figmentum.net/execute/dnevest"
 CONTENT_TYPE="application/json"
 
 create_newspaper() {

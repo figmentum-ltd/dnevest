@@ -1,5 +1,4 @@
 pub type ByteArray = component::dnevest::storage::ByteArray;
-/// type byte-array = list<u8>;
 #[derive(Clone)]
 pub struct Event {
     pub id: _rt::String,

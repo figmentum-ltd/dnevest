@@ -33,7 +33,7 @@ When sending the data, use the following JSON format. Note:
 
 #### Example request
 ```sh
-curl -k -X POST https://3.79.24.152/execute/dnevest \
+curl -k -X POST https://figmentum.net/execute/dnevest \
  	-H "Content-Type: application/json" \
  	-d '{"CreateNewspaper":{"input":{"signature":"В1645","name":"Стършел","start_year":1946,"end_year":null,"weekly_schedule":[false, false, false, false, true, false, false]}}}'
 ```
@@ -63,7 +63,7 @@ When specifying the date, use the following JSON format. Note:
 
 #### Example request
 ```sh
-curl -k -X GET https://3.79.24.152/query/dnevest \
+curl -k -X GET https://figmentum.net/query/dnevest \
  	-H "Content-Type: application/json" \
  	-d '{"NewspapersByDate":{"date":"16-08-2024"}}'
 ```
