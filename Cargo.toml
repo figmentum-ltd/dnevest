@@ -1,10 +1,10 @@
 [package]
 name = "dnevest"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
-# This project is compatible with platform version v0.1.0.
+# This project is compatible with platform version v0.1.1.
 wit-bindgen = "0.34.0"
 wit-bindgen-rt = { version = "0.34.0", features = ["bitflags"] }
 serde = { version = "1.0", features = ["derive"] }
