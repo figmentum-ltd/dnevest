@@ -340,14 +340,8 @@ mod test_invariant {
 
     #[test]
     fn the_same_start_and_end_year() {
-        let res = Newspaper::new_unchecked(
-            "В5555",
-            "Добра среща",
-            1978,
-            Some(1978),
-            PUBLICATED_ON,
-        )
-        .invariant_held(MockHost::now());
+        let res = Newspaper::new_unchecked("В5555", "Добра среща", 1978, Some(1978), PUBLICATED_ON)
+            .invariant_held(MockHost::now());
         assert!(res.is_ok())
     }
 
