@@ -11,9 +11,7 @@ pub(super) use newspaper::{newspapers_by_date, Newspaper};
 
 #[cfg(test)]
 pub(crate) use dto::QueryNewspaperDTO;
-#[cfg(test)]
 pub(super) use frequency::WeeklyFrequency;
-#[cfg(test)]
 pub(super) use signature::Signature;
 
 pub(crate) type Year = u32;

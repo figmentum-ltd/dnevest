@@ -11,9 +11,8 @@ use crate::{
 use super::{
     dto::QueryNewspaperDTO,
     error::{Error, Result},
-    frequency::WeeklyFrequency,
     signature::{self, Signature},
-    Date, Year,
+    Date, WeeklyFrequency, Year,
 };
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
@@ -36,17 +35,49 @@ impl Newspaper {
         end_year: Option<Year>,
         publicated_on: [bool; 7],
     ) -> Self {
-        Self {
-            signature: Signature::new(signature),
-            name: name.to_string(),
+        Self::new(
+            Signature::new(signature),
+            name.to_string(),
             start_year,
             end_year,
-            weekly_schedule: WeeklyFrequency::new(publicated_on),
-        }
+            WeeklyFrequency::new(publicated_on),
+        )
     }
 
     pub(crate) fn identificator(&self) -> &str {
-        self.signature.signature()
+        self.signature.as_str()
+    }
+
+    pub(crate) fn add_end_year(self, end_year: Year, now: Clock) -> Result<Self> {
+        self.end_year.map_or(
+            {
+                let obj = Self::new(
+                    self.signature,
+                    self.name,
+                    self.start_year,
+                    Some(end_year),
+                    self.weekly_schedule,
+                );
+                obj.invariant_held(now).map(|()| obj)
+            },
+            |_| Err(Error::EndYearExists),
+        )
+    }
+
+    fn new(
+        signature: Signature,
+        name: String,
+        start_year: Year,
+        end_year: Option<Year>,
+        weekly_schedule: WeeklyFrequency,
+    ) -> Self {
+        Self {
+            signature,
+            name,
+            start_year,
+            end_year,
+            weekly_schedule,
+        }
     }
 
     fn invariant_held(&self, now: Clock) -> Result<()> {
@@ -82,13 +113,13 @@ struct UncheckedNewspaper {
 
 impl UncheckedNewspaper {
     fn into_checked(self, clock: Clock) -> Result<Newspaper> {
-        let obj = Newspaper {
-            signature: self.signature,
-            name: self.name,
-            start_year: self.start_year,
-            end_year: self.end_year,
-            weekly_schedule: self.weekly_schedule,
-        };
+        let obj = Newspaper::new(
+            self.signature,
+            self.name,
+            self.start_year,
+            self.end_year,
+            self.weekly_schedule,
+        );
         obj.invariant_held(clock).map(|()| obj)
     }
 }
@@ -103,7 +134,9 @@ impl TryFrom<UncheckedNewspaper> for Newspaper {
 
 #[cfg(test)]
 fn try_from_unchecked(unchecked: UncheckedNewspaper) -> Result<Newspaper> {
-    unchecked.into_checked(mock_host::current_year())
+    use self::mock_host::MockHost;
+
+    unchecked.into_checked(MockHost::now())
 }
 
 impl From<Newspaper> for QueryNewspaperDTO {
@@ -112,7 +145,10 @@ impl From<Newspaper> for QueryNewspaperDTO {
     }
 }
 
-pub(crate) fn newspapers_by_date<A: Storage>(adapter: &mut A, date: Date) -> Result<ByteArray> {
+pub(crate) fn newspapers_by_date<A: Storage + Time>(
+    adapter: &mut A,
+    date: Date,
+) -> Result<ByteArray> {
     let year = date.year();
     let day = (date.day_of_week().number_from_monday() - 1) as usize;
 
@@ -123,14 +159,9 @@ pub(crate) fn newspapers_by_date<A: Storage>(adapter: &mut A, date: Date) -> Res
         )
         .into_iter()
         .filter_map(|ser_newspaper| {
-            #[cfg(test)]
-            let clock = mock_host::current_year();
-            #[cfg(not(test))]
-            let clock = Host::now();
-
             serde_json::from_slice::<UncheckedNewspaper>(&ser_newspaper)
                 .map_err(Error::DeserializationFault)
-                .and_then(|unchecked| unchecked.into_checked(clock))
+                .and_then(|unchecked| unchecked.into_checked(A::now()))
                 .ok()
                 .and_then(|newspaper| newspaper.published_on(day, year).then(|| newspaper.into()))
         })
@@ -144,12 +175,12 @@ mod tests {
     use std::collections::HashSet;
 
     use crate::{
-        newspaper::{newspaper::UncheckedNewspaper, Date, QueryNewspaperDTO, Year},
+        newspaper::{Date, QueryNewspaperDTO, Year},
         services::MockHost,
-        Storage,
+        Storage, Time,
     };
 
-    use super::Newspaper;
+    use super::{Error, Newspaper, Result, UncheckedNewspaper};
 
     #[test]
     fn serialize() {
@@ -215,7 +246,28 @@ mod tests {
         );
     }
 
-    fn publicized_on<A: Storage>(
+    #[test]
+    fn existing_end_year() {
+        let res = Newspaper::add_end_year(newspaper(), 1998, MockHost::now());
+        let err = Error::EndYearExists;
+
+        assert_err(res, err.to_string());
+    }
+
+    #[test]
+    fn add_end_year() {
+        let obj = Newspaper::new_unchecked(
+            "В1616",
+            "Народен спорт",
+            1944,
+            None,
+            [true, false, false, true, false, true, false],
+        );
+        let res = Newspaper::add_end_year(obj, 1989, MockHost::now());
+        assert_eq!(res.unwrap(), newspaper())
+    }
+
+    fn publicized_on<A: Storage + Time>(
         day: u32,
         month: u32,
         year: Year,
@@ -227,16 +279,34 @@ mod tests {
             .expect("Failed to deserialize the published newspapers from the result")
     }
 
+    fn newspaper() -> Newspaper {
+        Newspaper::new_unchecked(
+            "В1616",
+            "Народен спорт",
+            1944,
+            Some(1989),
+            [true, false, false, true, false, true, false],
+        )
+    }
+
     fn assert_publication_eq(publicated: Vec<QueryNewspaperDTO>, expected: Vec<QueryNewspaperDTO>) {
         let publicated_set: HashSet<QueryNewspaperDTO> = publicated.into_iter().collect();
         let expected_set: HashSet<QueryNewspaperDTO> = expected.into_iter().collect();
         assert_eq!(publicated_set, expected_set);
     }
+
+    fn assert_err(r: Result<Newspaper>, msg: String) {
+        assert!(r.is_err());
+        assert!(r.expect_err("expected an error").to_string().contains(&msg))
+    }
 }
 
 #[cfg(test)]
 mod test_invariant {
-    use crate::services::mock_host;
+    use crate::{
+        services::{mock_host, MockHost},
+        Time,
+    };
 
     use super::{Newspaper, Result};
 
@@ -244,28 +314,41 @@ mod test_invariant {
 
     #[test]
     fn start_year_in_future() {
-        let newspaper = Newspaper::new_unchecked(
+        let res = Newspaper::new_unchecked(
             "В1111",
             "Добро утро",
             mock_host::CURRENT_YEAR + 1,
             None,
             PUBLICATED_ON,
         )
-        .invariant_held(mock_host::current_year());
-        assert_err(newspaper, "start_year cannot be in the future");
+        .invariant_held(MockHost::now());
+        assert_err(res, "start_year cannot be in the future");
     }
 
     #[test]
     fn start_year_before_end() {
-        let newspaper = Newspaper::new_unchecked(
+        let res = Newspaper::new_unchecked(
             "В9999",
             "Лека нощ",
             mock_host::CURRENT_YEAR,
             Some(mock_host::CURRENT_YEAR - 5),
             PUBLICATED_ON,
         )
-        .invariant_held(mock_host::current_year());
-        assert_err(newspaper, "start_year cannot be after end_year");
+        .invariant_held(MockHost::now());
+        assert_err(res, "start_year cannot be after end_year");
+    }
+
+    #[test]
+    fn the_same_start_and_end_year() {
+        let res = Newspaper::new_unchecked(
+            "В5555",
+            "Добра среща",
+            1978,
+            Some(1978),
+            PUBLICATED_ON,
+        )
+        .invariant_held(MockHost::now());
+        assert!(res.is_ok())
     }
 
     fn assert_err(r: Result<()>, msg: &str) {

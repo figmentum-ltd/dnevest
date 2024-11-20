@@ -4,13 +4,19 @@ use std::result::Result;
 use crate::{
     bindings::ByteArray,
     errors::Error,
-    newspaper::{Date, Newspaper},
+    newspaper::{Date, Newspaper, Signature, Year},
 };
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Deserialize)]
 pub enum ExecuteMsg {
-    CreateNewspaper { input: Newspaper },
+    CreateNewspaper {
+        input: Newspaper,
+    },
+    AddFinalYear {
+        signature: Signature,
+        final_year: Year,
+    },
 }
 
 #[cfg_attr(test, derive(Debug, PartialEq))]

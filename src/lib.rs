@@ -23,6 +23,10 @@ impl Guest for Component {
     fn execute(cmd: ByteArray) -> Result<bindings::Event, ByteArray> {
         msgs::deserialize_msg(cmd).and_then(|msg| match msg {
             ExecuteMsg::CreateNewspaper { input } => services::create_newspaper(&mut Host, input),
+            ExecuteMsg::AddFinalYear {
+                signature,
+                final_year,
+            } => services::add_final_year(&mut Host, signature, final_year),
         })
     }
 

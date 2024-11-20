@@ -17,12 +17,12 @@ impl Signature {
         Self(signature.to_string())
     }
 
-    pub(super) fn signature(&self) -> &str {
+    pub(crate) fn as_str(&self) -> &str {
         self.0.as_str()
     }
 
     fn invariant_held(&self) -> Result<()> {
-        let sign = self.0.as_str();
+        let sign = self.as_str();
         let mut chars = sign.chars();
 
         // the character 'B' in cyrillic takes 2 bytes, so the signature length is 6

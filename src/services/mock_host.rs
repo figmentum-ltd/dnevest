@@ -1,6 +1,7 @@
 #[cfg(test)]
 use std::collections::HashMap;
 
+use crate::Time;
 #[cfg(test)]
 use crate::{
     bindings::{component::dnevest::time::Clock, ByteArray},
@@ -12,11 +13,6 @@ use super::Newspaper;
 
 #[cfg(test)]
 pub(crate) const CURRENT_YEAR: crate::newspaper::Year = 2024;
-
-#[cfg(test)]
-pub(crate) fn current_year() -> Clock {
-    Clock { year: CURRENT_YEAR }
-}
 
 #[cfg(test)]
 pub(crate) struct MockHost {
@@ -79,5 +75,12 @@ impl Storage for MockHost {
 
     fn retrieve_range(&mut self, _start: &str, _end: &str) -> Vec<ByteArray> {
         self.store.values().cloned().collect()
+    }
+}
+
+#[cfg(test)]
+impl Time for MockHost {
+    fn now() -> Clock {
+        Clock { year: CURRENT_YEAR }
     }
 }

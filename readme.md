@@ -44,7 +44,6 @@ curl -k -X POST https://figmentum.net/execute/dnevest \
 ```
 
 
-
 ### • Find newspapers by date
 To find newspapers published on a specific date, provide the date of interest in JSON format.
 
@@ -71,4 +70,34 @@ curl -k -X GET https://figmentum.net/query/dnevest \
 #### Example response
 ```
 [{"signature":"В1645","name":"Стършел"}]
+```
+
+### • Add a final year to mark the end of newspaper publication
+To add a final year to an existing newspaper, provide the newspaper's `signature` and the `final_year` value in JSON format.
+
+#### Example input
+When specifying the signature and final year, use the following JSON format. Note:
+
+- The `signature`  must match an existing newspaper.
+- The `final_year` cannot be before the year of the first newspaper's publication.
+
+```json
+{
+  "AddFinalYear": {
+    "signature": "В1645",
+    "final_year": 2024
+  }
+}
+```
+
+#### Example request
+```sh
+curl -k -X POST https://figmentum.net/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"AddFinalYear":{"signature":"В1645","final_year":2024}}'
+```
+
+#### Example response
+```
+{"offset_bytes":2926}
 ```

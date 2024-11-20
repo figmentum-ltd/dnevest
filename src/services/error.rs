@@ -12,6 +12,12 @@ pub enum Error {
 
     #[error("Newspaper domain error: {0}")]
     DomainError(#[from] newspaper::Error),
+
+    #[error("Problem while deserialization: {0}")]
+    DeserializationFault(serde_json::Error),
+
+    #[error("{0}")]
+    NotFound(&'static str),
 }
 
 impl Error {

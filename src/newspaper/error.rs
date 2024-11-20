@@ -11,6 +11,9 @@ pub(crate) enum Error {
     #[error("Invalid year: {0}")]
     InvalidYear(&'static str),
 
+    #[error("End year is already set for this newspaper.")]
+    EndYearExists,
+
     #[error("[Newspaper] Problem while deserialization: {0}")]
     DeserializationFault(serde_json::Error),
 
