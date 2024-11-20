@@ -33,7 +33,7 @@ When sending the data, use the following JSON format. Note:
 
 #### Example request
 ```sh
-curl -k -X POST https://figmentum.net/execute/dnevest \
+curl -k -X POST https://dnevest.com/execute/dnevest \
  	-H "Content-Type: application/json" \
  	-d '{"CreateNewspaper":{"input":{"signature":"В1645","name":"Стършел","start_year":1946,"end_year":null,"weekly_schedule":[false, false, false, false, true, false, false]}}}'
 ```
@@ -62,7 +62,7 @@ When specifying the date, use the following JSON format. Note:
 
 #### Example request
 ```sh
-curl -k -X GET https://figmentum.net/query/dnevest \
+curl -k -X GET https://dnevest.com/query/dnevest \
  	-H "Content-Type: application/json" \
  	-d '{"NewspapersByDate":{"date":"16-08-2024"}}'
 ```
@@ -92,7 +92,7 @@ When specifying the signature and final year, use the following JSON format. Not
 
 #### Example request
 ```sh
-curl -k -X POST https://figmentum.net/execute/dnevest \
+curl -k -X POST https://dnevest.com/execute/dnevest \
  	-H "Content-Type: application/json" \
  	-d '{"AddFinalYear":{"signature":"В1645","final_year":2024}}'
 ```
