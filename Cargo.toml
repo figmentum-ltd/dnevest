@@ -7,11 +7,11 @@ edition = "2021"
 # This project is compatible with platform version v0.1.1.
 wit-bindgen = { version = "0.35", default-features = false }
 wit-bindgen-rt = { version = "0.35", features = ["bitflags"], default-features = false }
-serde = { version = "1.0", features = ["derive"], default-features = false }
-serde_json = {version = "1.0", features = ["std"], default-features = false}
-thiserror = {version = "2.0", default-features = false}
+serde = { version = "1", features = ["derive"], default-features = false }
+serde_json = {version = "1", features = ["std"], default-features = false}
+thiserror = {version = "2", default-features = false}
 chrono = {version = "0.4", features = ["serde"], default-features = false}
-once_cell = {version = "1.20", default-features = false}
+once_cell = {version = "1", default-features = false}
 
 [lib]
 crate-type = ["cdylib"]
