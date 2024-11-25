@@ -34,14 +34,10 @@ impl Date {
     }
 
     #[cfg(test)]
-    pub(crate) fn new(day: u32, month: u32, year: Year) -> Self {
+    pub(crate) fn new(day: u16, month: u16, year: Year) -> Self {
         Self(
-            NaiveDate::from_ymd_opt(
-                year.try_into().expect("Failed conver u32 to i32"),
-                month,
-                day,
-            )
-            .expect("Failed create a valid NaiveDate object"),
+            NaiveDate::from_ymd_opt(i32::from(year), u32::from(month), u32::from(day))
+                .expect("Failed create a valid NaiveDate object"),
         )
     }
 }

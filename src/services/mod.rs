@@ -99,10 +99,12 @@ fn persist_and_emit_event<A: Storage>(
         .map_err(ServiceError::SerializationFault)
         .and_then(|serialized| {
             adapter.persist(signature, &serialized);
-            event.serialize().map(|serialized_event| vec![bindings::Event {
-                id: event_id.to_string(),
-                content: serialized_event,
-            }])
+            event.serialize().map(|serialized_event| {
+                vec![bindings::Event {
+                    id: event_id.to_string(),
+                    content: serialized_event,
+                }]
+            })
         })
 }
 

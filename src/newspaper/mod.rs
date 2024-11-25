@@ -14,4 +14,4 @@ pub(crate) use dto::QueryNewspaperDTO;
 pub(super) use frequency::WeeklyFrequency;
 pub(super) use signature::Signature;
 
-pub(crate) type Year = u32;
+pub(crate) type Year = u16;

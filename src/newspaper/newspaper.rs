@@ -268,8 +268,8 @@ mod tests {
     }
 
     fn publicized_on<A: Storage + Time>(
-        day: u32,
-        month: u32,
+        day: u16,
+        month: u16,
         year: Year,
         adapter: &mut A,
     ) -> Vec<QueryNewspaperDTO> {

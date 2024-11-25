@@ -313,7 +313,7 @@ pub mod component {
             #[repr(C)]
             #[derive(Clone, Copy)]
             pub struct Clock {
-                pub year: u32,
+                pub year: u16,
             }
             impl ::core::fmt::Debug for Clock {
                 fn fmt(
@@ -337,7 +337,7 @@ pub mod component {
                         unreachable!()
                     }
                     let ret = wit_import();
-                    Clock { year: ret as u32 }
+                    Clock { year: ret as u16 }
                 }
             }
         }
