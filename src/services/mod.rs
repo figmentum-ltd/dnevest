@@ -19,7 +19,7 @@ pub(crate) use mock_host::MockHost;
 pub(crate) fn create_newspaper<A: Storage>(
     adapter: &mut A,
     input: Newspaper,
-) -> StdResult<bindings::Event, ByteArray> {
+) -> StdResult<Vec<bindings::Event>, ByteArray> {
     self::new_newspaper(adapter, input).map_err(|error| error.serialize())
 }
 
@@ -27,7 +27,7 @@ pub(crate) fn add_final_year<A: Storage + Time>(
     adapter: &mut A,
     signature: Signature,
     final_year: Year,
-) -> StdResult<bindings::Event, ByteArray> {
+) -> StdResult<Vec<bindings::Event>, ByteArray> {
     self::define_end_year(adapter, signature.as_str(), final_year)
         .map_err(|error| error.serialize())
 }
@@ -44,7 +44,7 @@ pub(crate) fn newspapers_by_date<A: Storage + Time>(
 fn new_newspaper<A: Storage>(
     adapter: &mut A,
     newspaper: Newspaper,
-) -> StdResult<bindings::Event, ServiceError> {
+) -> StdResult<Vec<bindings::Event>, ServiceError> {
     let signature = newspaper.identificator();
     adapter
         .retrieve(signature)
@@ -64,7 +64,7 @@ fn define_end_year<A: Storage + Time>(
     adapter: &mut A,
     signature: &str,
     final_year: Year,
-) -> StdResult<bindings::Event, ServiceError> {
+) -> StdResult<Vec<bindings::Event>, ServiceError> {
     adapter
         .retrieve(signature)
         .ok_or(ServiceError::NotFound("Newspaper not found"))
@@ -94,15 +94,15 @@ fn persist_and_emit_event<A: Storage>(
     newspaper: &Newspaper,
     event_id: &str,
     event: Event,
-) -> StdResult<bindings::Event, ServiceError> {
+) -> StdResult<Vec<bindings::Event>, ServiceError> {
     serde_json::to_vec(newspaper)
         .map_err(ServiceError::SerializationFault)
         .and_then(|serialized| {
             adapter.persist(signature, &serialized);
-            event.serialize().map(|serialized_event| bindings::Event {
+            event.serialize().map(|serialized_event| vec![bindings::Event {
                 id: event_id.to_string(),
                 content: serialized_event,
-            })
+            }])
         })
 }
 
@@ -121,7 +121,7 @@ mod tests {
         let newspaper = newspaper();
 
         let res = super::create_newspaper(&mut adapter, newspaper);
-        assert_eq!((res.unwrap()).id, "dnevest_n_n".to_string());
+        assert_eq!((res.unwrap())[0].id, "dnevest_n_n".to_string());
     }
 
     #[test]
@@ -129,7 +129,7 @@ mod tests {
         let mut adapter = MockHost::new();
 
         let res = super::new_newspaper(&mut adapter, newspaper());
-        assert_eq!((res.unwrap()).id, "dnevest_n_n".to_string());
+        assert_eq!((res.unwrap())[0].id, "dnevest_n_n".to_string());
 
         let err = super::new_newspaper(&mut adapter, newspaper());
         assert_err(
@@ -166,9 +166,9 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(event.id, event_id.to_string());
+        assert_eq!(event[0].id, event_id.to_string());
         assert_eq!(
-            event.content,
+            event[0].content,
             Event::added_end_year(signature)
                 .serialize()
                 .expect("serialization failed")
@@ -185,7 +185,7 @@ mod tests {
         )
     }
 
-    fn assert_err(r: Result<bindings::Event, ServiceError>, msg: &str) {
+    fn assert_err(r: Result<Vec<bindings::Event>, ServiceError>, msg: &str) {
         assert!(r.expect_err("expected an error").to_string().contains(msg))
     }
 }

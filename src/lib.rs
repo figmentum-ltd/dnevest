@@ -20,7 +20,7 @@ mod services;
 struct Component;
 
 impl Guest for Component {
-    fn execute(cmd: ByteArray) -> Result<bindings::Event, ByteArray> {
+    fn execute(cmd: ByteArray) -> Result<Vec<bindings::Event>, Vec<u8>> {
         msgs::deserialize_msg(cmd).and_then(|msg| match msg {
             ExecuteMsg::CreateNewspaper { input } => services::create_newspaper(&mut Host, input),
             ExecuteMsg::AddFinalYear {

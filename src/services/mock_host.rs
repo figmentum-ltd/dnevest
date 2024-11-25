@@ -65,8 +65,8 @@ impl MockHost {
 
 #[cfg(test)]
 impl Storage for MockHost {
-    fn persist(&mut self, key: &str, req: &ByteArray) {
-        self.store.insert(key.to_string(), req.clone());
+    fn persist(&mut self, key: &str, value: &ByteArray) {
+        self.store.insert(key.to_string(), value.clone());
     }
 
     fn retrieve(&mut self, key: &str) -> Option<ByteArray> {
