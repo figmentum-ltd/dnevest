@@ -10,14 +10,27 @@ use super::{Error, Result};
 pub(super) struct Details {
     background: Rgb,
     frame: Frame,
+    wish: String,
+    font_type: String,
+    font_size: u8,
     card_id: u8,
 }
 
 impl Details {
-    fn new_unchecked(background: Rgb, frame: Frame, card_id: u8) -> Self {
+    fn new_unchecked(
+        background: Rgb,
+        frame: Frame,
+        wish: String,
+        font_type: String,
+        font_size: u8,
+        card_id: u8,
+    ) -> Self {
         Self {
             background,
             frame,
+            wish,
+            font_type,
+            font_size,
             card_id,
         }
     }
@@ -47,21 +60,41 @@ impl MaxCards {
 struct UncheckedDetails {
     background: Rgb,
     frame: Frame,
+    wish: String,
+    font_type: String,
+    font_size: u8,
     card_id: u8,
 }
 
 impl UncheckedDetails {
     #[cfg(test)]
-    fn new(background: Rgb, frame: Frame, card_id: u8) -> Self {
+    fn new(
+        background: Rgb,
+        frame: Frame,
+        wish: String,
+        font_type: String,
+        font_size: u8,
+        card_id: u8,
+    ) -> Self {
         Self {
             background,
             frame,
+            wish,
+            font_type,
+            font_size,
             card_id,
         }
     }
 
     fn into_checked(self, max_cards: MaxCards) -> Result<Details> {
-        let obj = Details::new_unchecked(self.background, self.frame, self.card_id);
+        let obj = Details::new_unchecked(
+            self.background,
+            self.frame,
+            self.wish,
+            self.font_type,
+            self.font_size,
+            self.card_id,
+        );
         obj.invariant_held(max_cards).map(|()| obj)
     }
 }
@@ -108,27 +141,48 @@ mod test {
 
     #[test]
     fn deserialize() {
-        let json = r#"{"background":[255,0,0],"frame":"White","card_id":10}"#;
+        let json = r#"{"background":[255,0,0],"frame":"White","wish":"Честит рожден ден!","font_type":"Times New Roman","font_size":12,"card_id":10}"#;
         let unchecked: UncheckedDetails =
             serde_json::from_str(json).expect("Failed to deserialize JSON");
-        let expected = Details::new_unchecked(Rgb::new(255, 0, 0), Frame::White, 10);
+        let expected = Details::new_unchecked(
+            Rgb::new(255, 0, 0),
+            Frame::White,
+            "Честит рожден ден!".to_string(),
+            "Times New Roman".to_string(),
+            12,
+            10,
+        );
 
         assert_eq!(expected, unchecked.into_checked(max_cards()).unwrap())
     }
 
     #[test]
     fn serialize() {
-        let details = Details::new_unchecked(Rgb::new(123, 23, 255), Frame::Wooden, 11);
+        let details = Details::new_unchecked(
+            Rgb::new(123, 23, 255),
+            Frame::Wooden,
+            "Честит юбилей!".to_string(),
+            "Arial".to_string(),
+            16,
+            11,
+        );
         let serialized = serde_json::to_string(&details).expect("failed to serialize");
         assert_eq!(
             serialized,
-            r#"{"background":[123,23,255],"frame":"Wooden","card_id":11}"#
+            r#"{"background":[123,23,255],"frame":"Wooden","wish":"Честит юбилей!","font_type":"Arial","font_size":16,"card_id":11}"#
         )
     }
 
     #[test]
     fn invalid_card() {
-        let unchecked = UncheckedDetails::new(Rgb::new(45, 68, 234), Frame::Black, MAX_CARDS + 1);
+        let unchecked = UncheckedDetails::new(
+            Rgb::new(45, 68, 234),
+            Frame::Black,
+            "Честит юбилей!".to_string(),
+            "Arial".to_string(),
+            16,
+            MAX_CARDS + 1,
+        );
         let checked = unchecked.into_checked(max_cards());
 
         assert_err(checked, "The card number does not exist");
