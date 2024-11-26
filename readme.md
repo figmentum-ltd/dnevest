@@ -43,7 +43,6 @@ curl -k -X POST https://dnevest.com/execute/dnevest \
 {"offset_bytes":3451}
 ```
 
-
 ### • Find newspapers by date
 To find newspapers published on a specific date, provide the date of interest in JSON format.
 
@@ -100,4 +99,23 @@ curl -k -X POST https://dnevest.com/execute/dnevest \
 #### Example response
 ```
 {"offset_bytes":2926}
+```
+
+### • Configure max number of cards
+To set or update the max number of cards, provide the `max_number` value. If no value is stored, the system will store the provided number. Otherwise, it will update the stored number only if the new number is different from the existing one.
+
+#### Example input
+```json
+{
+  "MaxCardsConfig": {
+    "max_number": 30
+  }
+}
+```
+
+#### Example request
+```sh
+curl -k -X POST https://dnevest.com/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"SpecifyMaxCards":{"max_number":30}}'
 ```

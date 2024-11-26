@@ -1,8 +1,11 @@
+use serde::Serialize;
+
 use std::result::Result as StdResult;
 
 use crate::{
     bindings::{self, ByteArray},
     newspaper::{self, Date, Newspaper, Signature, Year},
+    order::MaxCards,
     response::Event,
     Storage, Time,
 };
@@ -30,6 +33,13 @@ pub(crate) fn add_final_year<A: Storage + Time>(
 ) -> StdResult<Vec<bindings::Event>, ByteArray> {
     self::define_end_year(adapter, signature.as_str(), final_year)
         .map_err(|error| error.serialize())
+}
+
+pub(crate) fn specify_max_cards<A: Storage>(
+    adapter: &mut A,
+    max_number: u8,
+) -> StdResult<Vec<bindings::Event>, ByteArray> {
+    self::configure_max_cards(adapter, max_number).map_err(|error| error.serialize())
 }
 
 pub(crate) fn newspapers_by_date<A: Storage + Time>(
@@ -88,14 +98,41 @@ fn define_end_year<A: Storage + Time>(
         })
 }
 
-fn persist_and_emit_event<A: Storage>(
+fn configure_max_cards<A: Storage>(
+    adapter: &mut A,
+    max_number: u8,
+) -> StdResult<Vec<bindings::Event>, ServiceError> {
+    let key = "max_cards";
+    let needs_update = adapter
+        .retrieve(key)
+        .and_then(|ser| {
+            serde_json::from_slice::<MaxCards>(&ser)
+                .map_err(ServiceError::DeserializationFault)
+                .ok()
+        })
+        .map_or(true, |max_cards| max_cards.number() != max_number);
+
+    if needs_update {
+        persist_and_emit_event(
+            adapter,
+            key,
+            &MaxCards::new(max_number),
+            "dnevest_max_card",
+            Event::specified_max_cards(key),
+        )
+    } else {
+        Ok(Vec::new())
+    }
+}
+
+fn persist_and_emit_event<A: Storage, T: Serialize>(
     adapter: &mut A,
     signature: &str,
-    newspaper: &Newspaper,
+    item: &T,
     event_id: &str,
     event: Event,
 ) -> StdResult<Vec<bindings::Event>, ServiceError> {
-    serde_json::to_vec(newspaper)
+    serde_json::to_vec(item)
         .map_err(ServiceError::SerializationFault)
         .and_then(|serialized| {
             adapter.persist(signature, &serialized);
@@ -145,6 +182,17 @@ mod tests {
         let mut adapter = MockHost::with_newspapers();
         let res = super::define_end_year(&mut adapter, "В1223", 2021);
         assert_err(res, "Newspaper not found");
+    }
+
+    #[test]
+    fn add_max_cards() {
+        let mut adapter = MockHost::with_newspapers();
+        let res = super::configure_max_cards(&mut adapter, 30);
+        assert_eq!(res.unwrap()[0].id, "dnevest_max_card");
+
+        let res_dub = super::configure_max_cards(&mut adapter, 30);
+    
+        assert!(res_dub.unwrap().is_empty());
     }
 
     #[test]

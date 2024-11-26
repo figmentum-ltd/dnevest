@@ -17,6 +17,9 @@ pub enum ExecuteMsg {
         signature: Signature,
         final_year: Year,
     },
+    SpecifyMaxCards {
+        max_number: u8,
+    },
 }
 
 #[cfg_attr(test, derive(Debug, PartialEq))]

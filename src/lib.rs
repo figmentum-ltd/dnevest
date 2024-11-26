@@ -14,6 +14,7 @@ mod bindings;
 mod errors;
 mod msgs;
 mod newspaper;
+mod order;
 mod response;
 mod services;
 
@@ -27,6 +28,9 @@ impl Guest for Component {
                 signature,
                 final_year,
             } => services::add_final_year(&mut Host, signature, final_year),
+            ExecuteMsg::SpecifyMaxCards { max_number } => {
+                services::specify_max_cards(&mut Host, max_number)
+            }
         })
     }
 
