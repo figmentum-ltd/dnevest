@@ -10,6 +10,9 @@ pub(crate) enum Error {
 
     #[error("[order] {0}.")]
     NotFound(&'static str),
+
+    #[error("[order] Invalid waybill invariant: {0}")]
+    InvalidWaybill(&'static str)
 }
 
 pub(crate) type Result<T> = std::result::Result<T, Error>;
