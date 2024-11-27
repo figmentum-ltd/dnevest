@@ -1,7 +1,8 @@
-use std::result;
+use serde::Deserialize;
+
+use std::result::Result as StdResult;
 
 use chrono::{Datelike, NaiveDate, Weekday};
-use serde::Deserialize;
 
 use super::{
     error::{Error, Result},
@@ -45,7 +46,7 @@ impl Date {
 impl TryFrom<String> for Date {
     type Error = Error;
 
-    fn try_from(value: String) -> result::Result<Self, Self::Error> {
+    fn try_from(value: String) -> StdResult<Self, Self::Error> {
         Self::try_new(value.as_str())
     }
 }

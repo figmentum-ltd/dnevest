@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::result;
+
+use std::result::Result as StdResult;
 
 #[cfg(test)]
 use crate::services::mock_host;
@@ -127,7 +128,7 @@ impl UncheckedNewspaper {
 impl TryFrom<UncheckedNewspaper> for Newspaper {
     type Error = Error;
 
-    fn try_from(unchecked: UncheckedNewspaper) -> result::Result<Self, Self::Error> {
+    fn try_from(unchecked: UncheckedNewspaper) -> StdResult<Self, Self::Error> {
         unchecked.into_checked(Host::now())
     }
 }

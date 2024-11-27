@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::result;
+
+use std::result::Result as StdResult;
 
 use super::error::{Error, Result};
 
@@ -41,7 +42,7 @@ impl Signature {
 impl TryFrom<String> for Signature {
     type Error = Error;
 
-    fn try_from(value: String) -> result::Result<Self, Self::Error> {
+    fn try_from(value: String) -> StdResult<Self, Self::Error> {
         let obj = Signature(value);
         obj.invariant_held().map(|()| obj)
     }

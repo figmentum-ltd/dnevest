@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use std::result::Result as StdResult;
+
 use crate::{Host, Storage};
 
 use super::{Error, Result};
@@ -102,7 +104,7 @@ impl UncheckedDetails {
 impl TryFrom<UncheckedDetails> for Details {
     type Error = Error;
 
-    fn try_from(unchecked: UncheckedDetails) -> std::result::Result<Self, Self::Error> {
+    fn try_from(unchecked: UncheckedDetails) -> StdResult<Self, Self::Error> {
         Host.retrieve("max_cards")
             .ok_or(Error::NotFound("Failed to fetch the max cards."))
             .and_then(|max_cards| {
@@ -143,7 +145,7 @@ mod test {
     fn deserialize() {
         let json = r#"{"background":[255,0,0],"frame":"White","wish":"Честит рожден ден!","font_type":"Times New Roman","font_size":12,"card_id":10}"#;
         let unchecked: UncheckedDetails =
-            serde_json::from_str(json).expect("Failed to deserialize JSON");
+            serde_json::from_str(json).expect("failed to deserialize JSON");
         let expected = Details::new_unchecked(
             Rgb::new(255, 0, 0),
             Frame::White,
