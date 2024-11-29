@@ -81,6 +81,8 @@ impl Storage for MockHost {
 #[cfg(test)]
 impl Time for MockHost {
     fn now() -> Clock {
-        Clock { year: CURRENT_YEAR }
+        Clock {
+            timestamp: 1732880395,
+        }
     }
 }

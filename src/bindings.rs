@@ -313,14 +313,14 @@ pub mod component {
             #[repr(C)]
             #[derive(Clone, Copy)]
             pub struct Clock {
-                pub year: u16,
+                pub timestamp: u64,
             }
             impl ::core::fmt::Debug for Clock {
                 fn fmt(
                     &self,
                     f: &mut ::core::fmt::Formatter<'_>,
                 ) -> ::core::fmt::Result {
-                    f.debug_struct("Clock").field("year", &self.year).finish()
+                    f.debug_struct("Clock").field("timestamp", &self.timestamp).finish()
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
@@ -330,14 +330,14 @@ pub mod component {
                     #[link(wasm_import_module = "component:dnevest/time")]
                     extern "C" {
                         #[link_name = "now"]
-                        fn wit_import() -> i32;
+                        fn wit_import() -> i64;
                     }
                     #[cfg(not(target_arch = "wasm32"))]
-                    fn wit_import() -> i32 {
+                    fn wit_import() -> i64 {
                         unreachable!()
                     }
                     let ret = wit_import();
-                    Clock { year: ret as u16 }
+                    Clock { timestamp: ret as u64 }
                 }
             }
         }
@@ -399,19 +399,19 @@ pub(crate) use __export_example_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[link_section = "component-type:wit-bindgen:0.31.0:component:dnevest:example:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 486] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xe8\x02\x01A\x02\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 491] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xed\x02\x01A\x02\x01\
 A\x0f\x01B\x0a\x01p}\x04\0\x0abyte-array\x03\0\0\x01@\x02\x03keys\x05value\x01\x01\
 \0\x04\0\x07persist\x01\x02\x01k\x01\x01@\x01\x03keys\0\x03\x04\0\x08retrieve\x01\
 \x04\x01p\x01\x01@\x02\x05starts\x03ends\0\x05\x04\0\x0eretrieve-range\x01\x06\x03\
-\x01\x19component:dnevest/storage\x05\0\x01B\x04\x01r\x01\x04year{\x04\0\x05cloc\
-k\x03\0\0\x01@\0\0\x01\x04\0\x03now\x01\x02\x03\x01\x16component:dnevest/time\x05\
-\x01\x02\x03\0\0\x0abyte-array\x03\0\x0abyte-array\x03\0\x02\x01r\x02\x02ids\x07\
-content\x03\x03\0\x05event\x03\0\x04\x01p\x05\x01j\x01\x06\x01\x03\x01@\x01\x03c\
-md\x03\0\x07\x04\0\x07execute\x01\x08\x01j\x01\x03\x01\x03\x01@\x01\x03req\x03\0\
-\x09\x04\0\x05query\x01\x0a\x04\x01\x19component:dnevest/example\x04\0\x0b\x0d\x01\
-\0\x07example\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x07\
-0.216.0\x10wit-bindgen-rust\x060.31.0";
+\x01\x19component:dnevest/storage\x05\0\x01B\x04\x01r\x01\x09timestampw\x04\0\x05\
+clock\x03\0\0\x01@\0\0\x01\x04\0\x03now\x01\x02\x03\x01\x16component:dnevest/tim\
+e\x05\x01\x02\x03\0\0\x0abyte-array\x03\0\x0abyte-array\x03\0\x02\x01r\x02\x02id\
+s\x07content\x03\x03\0\x05event\x03\0\x04\x01p\x05\x01j\x01\x06\x01\x03\x01@\x01\
+\x03cmd\x03\0\x07\x04\0\x07execute\x01\x08\x01j\x01\x03\x01\x03\x01@\x01\x03req\x03\
+\0\x09\x04\0\x05query\x01\x0a\x04\x01\x19component:dnevest/example\x04\0\x0b\x0d\
+\x01\0\x07example\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-compone\
+nt\x070.216.0\x10wit-bindgen-rust\x060.31.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

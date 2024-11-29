@@ -1,9 +1,10 @@
+use chrono::{DateTime, Datelike};
 use serde::{Deserialize, Serialize};
 
 use std::result::Result as StdResult;
 
 #[cfg(test)]
-use crate::services::mock_host;
+use crate::services::MockHost;
 use crate::{
     bindings::{component::dnevest::time::Clock, ByteArray},
     Host, Storage, Time,
@@ -50,6 +51,7 @@ impl Newspaper {
     }
 
     pub(crate) fn add_end_year(self, end_year: Year, now: Clock) -> Result<Self> {
+        let current_year = extract_year(now.timestamp);
         self.end_year.map_or(
             {
                 let obj = Self::new(
@@ -59,7 +61,7 @@ impl Newspaper {
                     Some(end_year),
                     self.weekly_schedule,
                 );
-                obj.invariant_held(now).map(|()| obj)
+                obj.invariant_held(current_year).map(|()| obj)
             },
             |_| Err(Error::EndYearExists),
         )
@@ -81,9 +83,7 @@ impl Newspaper {
         }
     }
 
-    fn invariant_held(&self, now: Clock) -> Result<()> {
-        let current_year: Year = now.year;
-
+    fn invariant_held(&self, current_year: Year) -> Result<()> {
         (self.start_year > current_year)
             .then_some(Err(Error::InvalidYear(
                 "start_year cannot be in the future",
@@ -113,7 +113,8 @@ struct UncheckedNewspaper {
 }
 
 impl UncheckedNewspaper {
-    fn into_checked(self, clock: Clock) -> Result<Newspaper> {
+    fn into_checked(self, now: Clock) -> Result<Newspaper> {
+        let current_year = extract_year(now.timestamp);
         let obj = Newspaper::new(
             self.signature,
             self.name,
@@ -121,7 +122,7 @@ impl UncheckedNewspaper {
             self.end_year,
             self.weekly_schedule,
         );
-        obj.invariant_held(clock).map(|()| obj)
+        obj.invariant_held(current_year).map(|()| obj)
     }
 }
 
@@ -133,10 +134,16 @@ impl TryFrom<UncheckedNewspaper> for Newspaper {
     }
 }
 
+fn extract_year(millis: u64) -> Year {
+    let datetime = DateTime::from_timestamp_millis(
+        i64::try_from(millis).expect("u64 value is too large for i64"),
+    )
+    .expect("invalid timestamp");
+    u16::try_from(datetime.year()).expect("year cannot be negative")
+}
+
 #[cfg(test)]
 fn try_from_unchecked(unchecked: UncheckedNewspaper) -> Result<Newspaper> {
-    use self::mock_host::MockHost;
-
     unchecked.into_checked(MockHost::now())
 }
 
@@ -304,25 +311,18 @@ mod tests {
 
 #[cfg(test)]
 mod test_invariant {
-    use crate::{
-        services::{mock_host, MockHost},
-        Time,
-    };
+    use crate::services::mock_host;
 
-    use super::{Newspaper, Result};
+    use super::{Newspaper, Result, Year};
 
     const PUBLICATED_ON: [bool; 7] = [true, false, false, true, false, true, false];
+    const CURRENT_YEAR: Year = mock_host::CURRENT_YEAR;
 
     #[test]
     fn start_year_in_future() {
-        let res = Newspaper::new_unchecked(
-            "В1111",
-            "Добро утро",
-            mock_host::CURRENT_YEAR + 1,
-            None,
-            PUBLICATED_ON,
-        )
-        .invariant_held(MockHost::now());
+        let res =
+            Newspaper::new_unchecked("В1111", "Добро утро", CURRENT_YEAR + 1, None, PUBLICATED_ON)
+                .invariant_held(CURRENT_YEAR);
         assert_err(res, "start_year cannot be in the future");
     }
 
@@ -331,18 +331,18 @@ mod test_invariant {
         let res = Newspaper::new_unchecked(
             "В9999",
             "Лека нощ",
-            mock_host::CURRENT_YEAR,
-            Some(mock_host::CURRENT_YEAR - 5),
+            CURRENT_YEAR,
+            Some(CURRENT_YEAR - 5),
             PUBLICATED_ON,
         )
-        .invariant_held(MockHost::now());
+        .invariant_held(CURRENT_YEAR);
         assert_err(res, "start_year cannot be after end_year");
     }
 
     #[test]
     fn the_same_start_and_end_year() {
         let res = Newspaper::new_unchecked("В5555", "Добра среща", 1978, Some(1978), PUBLICATED_ON)
-            .invariant_held(MockHost::now());
+            .invariant_held(CURRENT_YEAR);
         assert!(res.is_ok())
     }
 
