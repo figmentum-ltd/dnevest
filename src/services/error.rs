@@ -18,6 +18,9 @@ pub enum Error {
 
     #[error("{0}")]
     NotFound(&'static str),
+
+    #[error("Cannot create the order because it already exists")]
+    DuplicateOrder,
 }
 
 impl Error {

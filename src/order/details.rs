@@ -19,7 +19,7 @@ pub(super) struct Details {
 }
 
 impl Details {
-    fn new_unchecked(
+    pub(super) fn new_unchecked(
         background: Rgb,
         frame: Frame,
         wish: String,
@@ -118,18 +118,18 @@ impl TryFrom<UncheckedDetails> for Details {
 // Since Rbg only accepts `u8` values, there is no need to check the invariant
 #[derive(Serialize, Deserialize)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
-struct Rgb([u8; 3]);
+pub(super) struct Rgb([u8; 3]);
 
 impl Rgb {
     #[cfg(test)]
-    fn new(red: u8, green: u8, blue: u8) -> Self {
+    pub(super) fn new(red: u8, green: u8, blue: u8) -> Self {
         Self([red, green, blue])
     }
 }
 
 #[derive(Serialize, Deserialize)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
-enum Frame {
+pub(super) enum Frame {
     White,
     Black,
     Wooden,

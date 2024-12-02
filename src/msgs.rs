@@ -5,6 +5,7 @@ use crate::{
     bindings::ByteArray,
     errors::Error,
     newspaper::{Date, Newspaper, Signature, Year},
+    order::Order,
 };
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
@@ -19,6 +20,9 @@ pub enum ExecuteMsg {
     },
     SpecifyMaxCards {
         max_number: u8,
+    },
+    CreateOrder {
+        order: Order,
     },
 }
 

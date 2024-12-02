@@ -5,7 +5,7 @@ use std::result::Result as StdResult;
 use crate::{
     bindings::{self, ByteArray},
     newspaper::{self, Date, Newspaper, Signature, Year},
-    order::MaxCards,
+    order::{MaxCards, Order},
     response::Event,
     Storage, Time,
 };
@@ -40,6 +40,13 @@ pub(crate) fn specify_max_cards<A: Storage>(
     max_number: u8,
 ) -> StdResult<Vec<bindings::Event>, ByteArray> {
     self::configure_max_cards(adapter, max_number).map_err(|error| error.serialize())
+}
+
+pub(crate) fn create_order<A: Storage>(
+    adapter: &mut A,
+    order: Order,
+) -> StdResult<Vec<bindings::Event>, ByteArray> {
+    self::place_order(adapter, order).map_err(|error| error.serialize())
 }
 
 pub(crate) fn newspapers_by_date<A: Storage + Time>(
@@ -125,9 +132,23 @@ fn configure_max_cards<A: Storage>(
     }
 }
 
+fn place_order<A: Storage>(
+    adapter: &mut A,
+    order: Order,
+) -> StdResult<Vec<bindings::Event>, ServiceError> {
+    let key = order.identifier();
+    let key = key.as_str();
+    adapter
+        .retrieve(key)
+        .map(|_| Err(ServiceError::DuplicateOrder))
+        .unwrap_or({
+            persist_and_emit_event(adapter, key, &order, "dnevest_n_o", Event::saved_order(key))
+        })
+}
+
 fn persist_and_emit_event<A: Storage, T: Serialize>(
     adapter: &mut A,
-    signature: &str,
+    key: &str,
     item: &T,
     event_id: &str,
     event: Event,
@@ -135,7 +156,7 @@ fn persist_and_emit_event<A: Storage, T: Serialize>(
     serde_json::to_vec(item)
         .map_err(ServiceError::SerializationFault)
         .and_then(|serialized| {
-            adapter.persist(signature, &serialized);
+            adapter.persist(key, &serialized);
             event.serialize().map(|serialized_event| {
                 vec![bindings::Event {
                     id: event_id.to_string(),
@@ -155,7 +176,7 @@ mod tests {
     };
 
     #[test]
-    fn create() {
+    fn create_newspaper() {
         let mut adapter = MockHost::new();
         let newspaper = newspaper();
 
@@ -191,7 +212,7 @@ mod tests {
         assert_eq!(res.unwrap()[0].id, "dnevest_max_card");
 
         let res_dub = super::configure_max_cards(&mut adapter, 30);
-    
+
         assert!(res_dub.unwrap().is_empty());
     }
 

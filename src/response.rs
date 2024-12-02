@@ -7,6 +7,7 @@ pub enum Event {
     NewspaperCreated(String),
     AddedEndYear(String),
     SpecifiedMaxCards(String),
+    SavedOrder(String),
 }
 
 impl Event {
@@ -20,6 +21,10 @@ impl Event {
 
     pub(crate) fn specified_max_cards(id: &str) -> Self {
         Event::SpecifiedMaxCards(id.to_string())
+    }
+
+    pub(crate) fn saved_order(id: &str) -> Self {
+        Event::SavedOrder(id.to_string())
     }
 
     pub(crate) fn serialize(&self) -> Result<ByteArray, ServiceError> {

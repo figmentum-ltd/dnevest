@@ -15,7 +15,7 @@ pub(super) struct Waybill {
 }
 
 impl Waybill {
-    fn new_unchecked(
+    pub(super) fn new_unchecked(
         customer_names: String,
         phone_number: String,
         address: String,
@@ -29,6 +29,11 @@ impl Waybill {
         }
     }
 
+    pub(super) fn phone(&self) -> &str {
+        &self.phone_number
+    }
+
+    // TODO: check address
     fn invariant_held(&self) -> Result<()> {
         check_names(&self.customer_names).and_then(|()| check_phone(&self.phone_number))
     }
@@ -66,7 +71,7 @@ fn check_phone(number: &str) -> Result<()> {
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Serialize, Deserialize)]
-enum OrderType {
+pub(super) enum OrderType {
     Standart,
     Express,
 }
@@ -154,7 +159,7 @@ mod test {
 
     #[test]
     fn deserialize() {
-        let json = r#"{"customer_names":"Тодор Георгиев","phone_number":"087352849","address":"Пловдив, ул.Тракия 12","order_type":"Standart"}"#;
+        let json = r#"{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","order_type":"Standart"}"#;
         let unchecked: UncheckedWaybill =
             serde_json::from_str(json).expect("failed to deserialize JSON");
         assert_eq!(waybill(), unchecked.into_checked().unwrap())

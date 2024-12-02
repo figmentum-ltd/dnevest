@@ -102,7 +102,8 @@ curl -k -X POST https://dnevest.com/execute/dnevest \
 ```
 
 ### • Configure max number of cards
-To set or update the max number of cards, provide the `max_number` value. If no value is stored, the system will store the provided number. Otherwise, it will update the stored number only if the new number is different from the existing one.
+To set or update the max number of cards, provide the `max_number` value. If no value is stored, the system will store the provided number. 
+Otherwise, it will update the stored number only if the new number is different from the existing one.
 
 #### Example input
 ```json
@@ -118,4 +119,48 @@ To set or update the max number of cards, provide the `max_number` value. If no 
 curl -k -X POST https://dnevest.com/execute/dnevest \
  	-H "Content-Type: application/json" \
  	-d '{"SpecifyMaxCards":{"max_number":30}}'
+```
+
+### • Create a new order
+To create a new order, provide the details for the order, the selected newspapers' signatures and the waybill information.
+
+#### Example input
+When specifing the properties, use the following JSON format.
+
+- The `details` contains information about the appearance and content of the order. The `background` must contain a valid RGB value and the `card_id`
+ must be within the maximum allowed value.
+- The `newspapers` contains the ordered newspapers selected for the order. At least one newspaper must be selected and each `signature` must correspond 
+to an existing newspaper.
+- The `waybill` contains details about the customer and and the delivery address. The `customer_names` must include a minimum of 2 names and the `phone_number` 
+must start with "0" or "+359" and contain exactly 9 digits after that.
+
+```json
+{
+  "CreateOrder": {
+    "order": {
+      "details": {
+        "background": [134, 24, 29],
+        "frame": "White",
+        "wish": "Честит рожден ден!",
+        "font_type": "Times New Roman",
+        "font_size": 12,
+        "card_id": 10
+      },
+      "newspapers": ["В1633", "В1612", null],
+      "waybill": {
+        "customer_names": "Тодор Георгиев",
+        "phone_number": "0873528495",
+        "address": "Пловдив, ул.Тракия 12",
+        "order_type": "Standart"
+      }
+    }
+  }
+}
+```
+
+#### Example request
+```sh
+curl -k -X POST https://dnevest.com/execute/dnevest \
+ 	-H "Content-Type: application/json" \
+ 	-d '{"CreateOrder":{"order":{"details":{"background":[134,24,29],"frame":"White","wish":"Честит рожден ден!","font_type":"Times New Roman","font_size":12,"card_id":10},"newspapers":["В1633","В1612",null],"waybill":{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","order_type":"Standart"}}}}'
 ```

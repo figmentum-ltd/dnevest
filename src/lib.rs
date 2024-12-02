@@ -31,6 +31,7 @@ impl Guest for Component {
             ExecuteMsg::SpecifyMaxCards { max_number } => {
                 services::specify_max_cards(&mut Host, max_number)
             }
+            ExecuteMsg::CreateOrder { order } => services::create_order(&mut Host, order),
         })
     }
 
@@ -72,9 +73,7 @@ trait Time {
 
 impl Time for Host {
     fn now() -> Clock {
-        let now = time::now();
-        debug_assert!(now.year > 2023);
-        now
+        time::now()
     }
 }
 
