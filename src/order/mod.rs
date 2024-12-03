@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use std::result::Result as StdResult;
+use std::{marker::PhantomData, result::Result as StdResult};
 
 use details::Details;
 use error::{Error, Result};
@@ -17,7 +17,7 @@ type OrderedNewspapers = [Option<Signature>; 3];
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Serialize, Deserialize)]
-#[serde(try_from = "UncheckedOrder")]
+#[serde(try_from = "UncheckedOrder<Host, Host>")]
 pub(crate) struct Order {
     details: Details,
     newspapers: OrderedNewspapers,
@@ -44,14 +44,13 @@ impl Order {
         generate_key(self.timestamp, self.waybill.phone())
     }
 
-    fn invariant_held<A: Storage>(&self, adapter: &mut A) -> Result<()> {
+    fn invariant_held<S: Storage>(&self, storage: &mut S) -> Result<()> {
         let mut at_least_one = false;
         self.newspapers.iter().try_for_each(|opt_signature| {
             if let Some(signature) = opt_signature {
                 at_least_one = true;
                 let signature = signature.as_str();
-                dbg!(&signature);
-                if adapter.retrieve(signature).is_none() {
+                if storage.retrieve(signature).is_none() {
                     return Err(Error::InvalidOrder(format!(
                         "The signature {} is not found",
                         signature
@@ -72,23 +71,36 @@ impl Order {
 }
 
 #[derive(Deserialize)]
-struct UncheckedOrder {
+struct UncheckedOrder<S, T>
+where
+    S: Storage + Default,
+    T: Time + Default,
+{
     details: Details,
     newspapers: OrderedNewspapers,
     waybill: Waybill,
+    #[serde(skip)]
+    _storage: PhantomData<S>,
+    #[serde(skip)]
+    _time: PhantomData<T>,
 }
 
-impl TryFrom<UncheckedOrder> for Order {
+impl<S, T> TryFrom<UncheckedOrder<S, T>> for Order
+where
+    S: Storage + Default,
+    T: Time + Default,
+{
     type Error = Error;
 
-    fn try_from(unchecked: UncheckedOrder) -> StdResult<Self, Self::Error> {
+    fn try_from(unchecked: UncheckedOrder<S, T>) -> StdResult<Self, Self::Error> {
+        let mut storage_instance = S::default();
         let obj = Order::new_unchecked(
             unchecked.details,
             unchecked.newspapers,
             unchecked.waybill,
-            Host::now().timestamp,
+            T::now().timestamp,
         );
-        obj.invariant_held(&mut Host).map(|()| obj)
+        obj.invariant_held(&mut storage_instance).map(|()| obj)
     }
 }
 

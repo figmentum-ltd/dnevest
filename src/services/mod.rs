@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn create_newspaper() {
-        let mut adapter = MockHost::new();
+        let mut adapter = MockHost::default();
         let newspaper = newspaper();
 
         let res = super::create_newspaper(&mut adapter, newspaper);
@@ -186,7 +186,7 @@ mod tests {
 
     #[test]
     fn dublicate_signature() {
-        let mut adapter = MockHost::new();
+        let mut adapter = MockHost::default();
 
         let res = super::new_newspaper(&mut adapter, newspaper());
         assert_eq!((res.unwrap())[0].id, "dnevest_n_n".to_string());
