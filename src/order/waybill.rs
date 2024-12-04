@@ -85,14 +85,13 @@ struct UncheckedWaybill {
 }
 
 impl UncheckedWaybill {
-    fn into_checked(self) -> Result<Waybill> {
-        let obj = Waybill::new_unchecked(
+    fn into_checked(self) -> Waybill {
+        Waybill::new_unchecked(
             self.customer_names,
             self.phone_number,
             self.address,
             self.order_type,
-        );
-        obj.invariant_held().map(|()| obj)
+        )
     }
 }
 
@@ -100,16 +99,14 @@ impl TryFrom<UncheckedWaybill> for Waybill {
     type Error = Error;
 
     fn try_from(unchecked: UncheckedWaybill) -> StdResult<Self, Self::Error> {
-        unchecked.into_checked()
+        let obj = unchecked.into_checked();
+        obj.invariant_held().map(|()| obj)
     }
 }
 
 #[cfg(test)]
 mod test_invariant {
-    use crate::order::{
-        error::Result,
-        waybill::{check_names, check_phone},
-    };
+    use super::{check_names, check_phone, Result};
 
     #[test]
     fn valid_names() {
@@ -155,14 +152,25 @@ mod test_invariant {
 
 #[cfg(test)]
 mod test {
-    use super::{OrderType, UncheckedWaybill, Waybill};
+    use super::{OrderType, Result, UncheckedWaybill, Waybill};
 
     #[test]
     fn deserialize() {
         let json = r#"{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","order_type":"Standart"}"#;
         let unchecked: UncheckedWaybill =
             serde_json::from_str(json).expect("failed to deserialize JSON");
-        assert_eq!(waybill(), unchecked.into_checked().unwrap())
+        assert_eq!(waybill(), unchecked.into_checked())
+    }
+
+    #[test]
+    fn deserialization_err() {
+        let json = r#"{"customer_names":"Тодор Георгиев","phone_number":"+358873528495","address":"Пловдив, ул.Тракия 12","order_type":"Standart"}"#;
+        let unchecked: UncheckedWaybill =
+            serde_json::from_str(json).expect("failed to deserialize JSON");
+        assert_err(
+            unchecked.try_into(),
+            "Phone number must start with 0 or +359",
+        )
     }
 
     #[test]
@@ -182,5 +190,9 @@ mod test {
             "Пловдив, ул.Тракия 12".to_string(),
             OrderType::Standart,
         )
+    }
+
+    fn assert_err(r: Result<Waybill>, msg: &str) {
+        assert!(r.expect_err("expected an error").to_string().contains(msg))
     }
 }

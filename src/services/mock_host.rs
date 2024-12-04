@@ -15,7 +15,6 @@ use super::Newspaper;
 pub(crate) const CURRENT_YEAR: crate::newspaper::Year = 2024;
 
 #[cfg(test)]
-#[derive(Default)]
 pub(crate) struct MockHost {
     store: HashMap<String, ByteArray>,
 }
@@ -55,6 +54,18 @@ impl MockHost {
                 [true, true, true, true, true, true, true],
             ),
         ]
+    }
+}
+
+impl Default for MockHost {
+    fn default() -> Self {
+        let mut host = Self {
+            store: Default::default(),
+        };
+
+        let max_cards = serde_json::to_vec(&40).expect("Failed to serialize max_cards");
+        host.persist("max_cards", &max_cards);
+        host
     }
 }
 

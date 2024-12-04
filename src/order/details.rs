@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use std::result::Result as StdResult;
+use std::{marker::PhantomData, result::Result as StdResult};
 
 use crate::{Host, Storage};
 
@@ -8,7 +8,7 @@ use super::{Error, Result};
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Serialize, Deserialize)]
-#[serde(try_from = "UncheckedDetails")]
+#[serde(try_from = "UncheckedDetails<Host>")]
 pub(super) struct Details {
     background: Rgb,
     frame: Frame,
@@ -59,58 +59,53 @@ impl MaxCards {
     }
 }
 #[derive(Deserialize)]
-struct UncheckedDetails {
+struct UncheckedDetails<S>
+where
+    S: Storage,
+{
     background: Rgb,
     frame: Frame,
     wish: String,
     font_type: String,
     font_size: u8,
     card_id: u8,
+    #[serde(skip)]
+    _storage: PhantomData<S>,
 }
 
-impl UncheckedDetails {
-    #[cfg(test)]
-    fn new(
-        background: Rgb,
-        frame: Frame,
-        wish: String,
-        font_type: String,
-        font_size: u8,
-        card_id: u8,
-    ) -> Self {
-        Self {
-            background,
-            frame,
-            wish,
-            font_type,
-            font_size,
-            card_id,
-        }
-    }
-
-    fn into_checked(self, max_cards: MaxCards) -> Result<Details> {
-        let obj = Details::new_unchecked(
+impl<S> UncheckedDetails<S>
+where
+    S: Storage,
+{
+    fn into_checked(self) -> Details {
+        Details::new_unchecked(
             self.background,
             self.frame,
             self.wish,
             self.font_type,
             self.font_size,
             self.card_id,
-        );
-        obj.invariant_held(max_cards).map(|()| obj)
+        )
     }
 }
 
-impl TryFrom<UncheckedDetails> for Details {
+impl<S> TryFrom<UncheckedDetails<S>> for Details
+where
+    S: Storage + Default,
+{
     type Error = Error;
 
-    fn try_from(unchecked: UncheckedDetails) -> StdResult<Self, Self::Error> {
-        Host.retrieve("max_cards")
+    fn try_from(unchecked: UncheckedDetails<S>) -> StdResult<Self, Self::Error> {
+        S::default()
+            .retrieve("max_cards")
             .ok_or(Error::NotFound("Failed to fetch the max cards."))
             .and_then(|max_cards| {
                 serde_json::from_slice(&max_cards)
                     .map_err(Error::DeserializationFault)
-                    .and_then(|max_cards| unchecked.into_checked(max_cards))
+                    .and_then(|max_cards| {
+                        let obj = unchecked.into_checked();
+                        obj.invariant_held(max_cards).map(|()| obj)
+                    })
             })
     }
 }
@@ -137,14 +132,14 @@ pub(super) enum Frame {
 
 #[cfg(test)]
 mod test {
-    use super::{Details, Frame, MaxCards, Result, Rgb, UncheckedDetails};
+    use crate::services::MockHost;
 
-    const MAX_CARDS: u8 = 40;
+    use super::{Details, Frame, Result, Rgb, UncheckedDetails};
 
     #[test]
     fn deserialize() {
         let json = r#"{"background":[255,0,0],"frame":"White","wish":"Честит рожден ден!","font_type":"Times New Roman","font_size":12,"card_id":10}"#;
-        let unchecked: UncheckedDetails =
+        let unchecked: UncheckedDetails<MockHost> =
             serde_json::from_str(json).expect("failed to deserialize JSON");
         let expected = Details::new_unchecked(
             Rgb::new(255, 0, 0),
@@ -155,7 +150,16 @@ mod test {
             10,
         );
 
-        assert_eq!(expected, unchecked.into_checked(max_cards()).unwrap())
+        assert_eq!(expected, unchecked.into_checked())
+    }
+
+    #[test]
+    fn invalid_card() {
+        let json = r#"{"background":[255,0,0],"frame":"White","wish":"Честит рожден ден!","font_type":"Times New Roman","font_size":12,"card_id":41}"#;
+        let unchecked: UncheckedDetails<MockHost> =
+            serde_json::from_str(json).expect("failed to deserialize JSON");
+
+        assert_err(unchecked.try_into(), "The card number does not exist");
     }
 
     #[test]
@@ -175,26 +179,7 @@ mod test {
         )
     }
 
-    #[test]
-    fn invalid_card() {
-        let unchecked = UncheckedDetails::new(
-            Rgb::new(45, 68, 234),
-            Frame::Black,
-            "Честит юбилей!".to_string(),
-            "Arial".to_string(),
-            16,
-            MAX_CARDS + 1,
-        );
-        let checked = unchecked.into_checked(max_cards());
-
-        assert_err(checked, "The card number does not exist");
-    }
-
     fn assert_err(r: Result<Details>, msg: &str) {
         assert!(r.expect_err("expected an error").to_string().contains(msg))
-    }
-
-    fn max_cards() -> MaxCards {
-        MaxCards::new(MAX_CARDS)
     }
 }
