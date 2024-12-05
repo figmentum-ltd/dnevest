@@ -12,7 +12,7 @@ pub(crate) enum Error {
     NotFound(&'static str),
 
     #[error("[order] Invalid waybill invariant: {0}")]
-    InvalidWaybill(&'static str),
+    InvalidDelivery(&'static str),
 
     #[error("[order] {0}")]
     InvalidOrder(String),

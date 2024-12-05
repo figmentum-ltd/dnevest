@@ -4,26 +4,25 @@ use super::{Error, Result};
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Serialize, Deserialize)]
-// TODO rename it to "Delivery"
-pub(super) struct Waybill {
+pub(super) struct Delivery {
     customer_names: String,
     phone_number: String,
     address: String,
-    order_type: OrderType,
+    priority: Priority,
 }
 
-impl Waybill {
+impl Delivery {
     pub(crate) fn new_unchecked(
         customer_names: String,
         phone_number: String,
         address: String,
-        order_type: OrderType,
+        priority: Priority,
     ) -> Self {
         Self {
             customer_names,
             phone_number,
             address,
-            order_type,
+            priority,
         }
     }
 
@@ -41,7 +40,7 @@ fn check_names(names: &str) -> Result<()> {
     if names.split_whitespace().count() >= 2 {
         Ok(())
     } else {
-        Err(Error::InvalidWaybill(
+        Err(Error::InvalidDelivery(
             "The customer has to supply at least two names.",
         ))
     }
@@ -53,7 +52,7 @@ fn check_phone(number: &str) -> Result<()> {
         .or_else(|| number.strip_prefix("0"))
         .map_or_else(
             || {
-                Err(Error::InvalidWaybill(
+                Err(Error::InvalidDelivery(
                     "Phone number must start with 0 or +359",
                 ))
             },
@@ -61,7 +60,7 @@ fn check_phone(number: &str) -> Result<()> {
                 if digits_only.len() == 9 && digits_only.chars().all(|c| c.is_ascii_digit()) {
                     Ok(())
                 } else {
-                    Err(Error::InvalidWaybill("Wrong number of digits"))
+                    Err(Error::InvalidDelivery("Wrong number of digits"))
                 }
             },
         )
@@ -69,8 +68,7 @@ fn check_phone(number: &str) -> Result<()> {
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Serialize, Deserialize)]
-// TODO rename to "Priority"
-pub(super) enum OrderType {
+pub(super) enum Priority {
     Standart,
     Express,
 }
@@ -123,12 +121,12 @@ mod test_invariant {
 
 #[cfg(test)]
 mod test {
-    use super::{OrderType, Waybill};
+    use super::{Delivery, Priority};
 
     #[test]
     fn deserialize() {
-        let json = r#"{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","order_type":"Standart"}"#;
-        let unchecked: Waybill = serde_json::from_str(json).expect("failed to deserialize JSON");
+        let json = r#"{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","priority":"Standart"}"#;
+        let unchecked: Delivery = serde_json::from_str(json).expect("failed to deserialize JSON");
         assert_eq!(waybill(), unchecked)
     }
 
@@ -138,16 +136,16 @@ mod test {
         let serialized = serde_json::to_string(&waybill).expect("failed to serialize");
         assert_eq!(
             serialized,
-            r#"{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","order_type":"Standart"}"#
+            r#"{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","priority":"Standart"}"#
         )
     }
 
-    fn waybill() -> Waybill {
-        Waybill::new_unchecked(
+    fn waybill() -> Delivery {
+        Delivery::new_unchecked(
             "Тодор Георгиев".to_string(),
             "0873528495".to_string(),
             "Пловдив, ул.Тракия 12".to_string(),
-            OrderType::Standart,
+            Priority::Standart,
         )
     }
 }

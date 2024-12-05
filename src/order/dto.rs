@@ -5,7 +5,7 @@ use std::{marker::PhantomData, result::Result as StdResult};
 use crate::{Storage, Time};
 
 use super::{
-    details::Details, waybill::Waybill, Error, MaxCards, Order, OrderedNewspapers, Result,
+    delivery::Delivery, wish_card::WishCard, Error, MaxCards, Order, OrderedNewspapers, Result,
 };
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
@@ -15,9 +15,9 @@ where
     S: Storage + Default,
     T: Time + Default,
 {
-    details: Details,
+    details: WishCard,
     newspapers: OrderedNewspapers,
-    waybill: Waybill,
+    waybill: Delivery,
     #[serde(skip)]
     _storage: PhantomData<S>,
     #[serde(skip)]

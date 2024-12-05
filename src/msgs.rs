@@ -5,7 +5,8 @@ use crate::{
     bindings::ByteArray,
     errors::Error,
     newspaper::{Date, Newspaper, Signature, Year},
-    order::{CreateOrder, Order}, Host,
+    order::{CreateOrder, Order},
+    Host,
 };
 
 // #[cfg_attr(test, derive(Debug, PartialEq))]

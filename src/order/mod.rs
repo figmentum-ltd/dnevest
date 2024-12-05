@@ -1,17 +1,17 @@
 use serde::{Deserialize, Serialize};
 
-use details::Details;
 use error::{Error, Result};
+use wish_card::WishCard;
 
-mod details;
+mod delivery;
 mod dto;
 mod error;
-mod waybill;
+mod wish_card;
 
 use crate::newspaper::Signature;
-pub(crate) use details::MaxCards;
+use delivery::Delivery;
 pub(crate) use dto::CreateOrder;
-use waybill::Waybill;
+pub(crate) use wish_card::MaxCards;
 
 // TODO rename type to be Cover
 pub(crate) type OrderedNewspapers = [Option<Signature>; 3];
@@ -19,18 +19,18 @@ pub(crate) type OrderedNewspapers = [Option<Signature>; 3];
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Order {
-    details: Details,
+    details: WishCard,
     newspapers: OrderedNewspapers,
-    waybill: Waybill,
+    waybill: Delivery,
     // TODO rename to "created_on_ms"
     timestamp: u64,
 }
 
 impl Order {
     fn new_unchecked(
-        details: Details,
+        details: WishCard,
         newspapers: OrderedNewspapers,
-        waybill: Waybill,
+        waybill: Delivery,
         timestamp: u64,
     ) -> Self {
         Self {
