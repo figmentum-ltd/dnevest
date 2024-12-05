@@ -61,14 +61,13 @@ When specifying the date, use the following JSON format. Note:
 
 #### Example request
 ```sh
-curl -k -X GET https://dnevest.com/query/dnevest \
- 	-H "Content-Type: application/json" \
- 	-d '{"NewspapersByDate":{"date":"16-08-2024"}}'
+curl -k -X GET "https://dnevest.com/query/dnevest" \
+  --get --data-urlencode '{"NewspapersByDate":{"date":"16-08-2024"}}'
 ```
 
 #### Example response
 ```
-[{"signature":"В1645","name":"Стършел"}]
+[{"signature":"В1612","name":"Труд"},{"signature":"В1645","name":"Стършел"},{"signature":"В5499","name":"Стандарт"}]
 ```
 
 ### • Add a final year to mark the end of newspaper publication
