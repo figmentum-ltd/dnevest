@@ -4,7 +4,7 @@ version = "0.1.2"
 edition = "2021"
 
 [dependencies]
-# This project is compatible with platform version v0.1.1.
+# This project is compatible with platform version v0.1.2.
 wit-bindgen = { version = "0.35", default-features = false }
 wit-bindgen-rt = { version = "0.35", features = ["bitflags"], default-features = false }
 serde = { version = "1", features = ["derive"], default-features = false }
