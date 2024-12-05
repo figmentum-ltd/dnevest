@@ -48,9 +48,9 @@ struct Host;
 trait Storage {
     fn persist(&mut self, key: &str, req: &ByteArray);
 
-    fn retrieve(&mut self, key: &str) -> Option<ByteArray>;
+    fn retrieve(&self, key: &str) -> Option<ByteArray>;
 
-    fn retrieve_range(&mut self, start: &str, end: &str) -> Vec<ByteArray>;
+    fn retrieve_range(&self, start: &str, end: &str) -> Vec<ByteArray>;
 }
 
 impl Storage for Host {
@@ -58,11 +58,11 @@ impl Storage for Host {
         storage::persist(key, req)
     }
 
-    fn retrieve(&mut self, key: &str) -> Option<ByteArray> {
+    fn retrieve(&self, key: &str) -> Option<ByteArray> {
         storage::retrieve(key)
     }
 
-    fn retrieve_range(&mut self, start: &str, end: &str) -> Vec<ByteArray> {
+    fn retrieve_range(&self, start: &str, end: &str) -> Vec<ByteArray> {
         storage::retrieve_range(start, end)
     }
 }

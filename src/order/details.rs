@@ -1,20 +1,18 @@
 use serde::{Deserialize, Serialize};
 
-use std::{marker::PhantomData, result::Result as StdResult};
-
-use crate::{Host, Storage};
-
 use super::{Error, Result};
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Serialize, Deserialize)]
-#[serde(try_from = "UncheckedDetails<Host>")]
+// TODO rename to "WishCard" and insert newspapers(covers)
 pub(super) struct Details {
     background: Rgb,
     frame: Frame,
+    // TODO become 'message'
     wish: String,
     font_type: String,
     font_size: u8,
+    // TODO to be "template_id"
     card_id: u8,
 }
 
@@ -37,7 +35,7 @@ impl Details {
         }
     }
 
-    fn invariant_held(&self, max_cards: MaxCards) -> Result<()> {
+    pub(super) fn check(&self, max_cards: MaxCards) -> Result<()> {
         if self.card_id > max_cards.0 {
             Err(Error::InvalidCard)
         } else {
@@ -56,57 +54,6 @@ impl MaxCards {
 
     pub(crate) fn number(&self) -> u8 {
         self.0
-    }
-}
-#[derive(Deserialize)]
-struct UncheckedDetails<S>
-where
-    S: Storage,
-{
-    background: Rgb,
-    frame: Frame,
-    wish: String,
-    font_type: String,
-    font_size: u8,
-    card_id: u8,
-    #[serde(skip)]
-    _storage: PhantomData<S>,
-}
-
-impl<S> UncheckedDetails<S>
-where
-    S: Storage,
-{
-    fn into_checked(self) -> Details {
-        Details::new_unchecked(
-            self.background,
-            self.frame,
-            self.wish,
-            self.font_type,
-            self.font_size,
-            self.card_id,
-        )
-    }
-}
-
-impl<S> TryFrom<UncheckedDetails<S>> for Details
-where
-    S: Storage + Default,
-{
-    type Error = Error;
-
-    fn try_from(unchecked: UncheckedDetails<S>) -> StdResult<Self, Self::Error> {
-        S::default()
-            .retrieve("max_cards")
-            .ok_or(Error::NotFound("Failed to fetch the max cards."))
-            .and_then(|max_cards| {
-                serde_json::from_slice(&max_cards)
-                    .map_err(Error::DeserializationFault)
-                    .and_then(|max_cards| {
-                        let obj = unchecked.into_checked();
-                        obj.invariant_held(max_cards).map(|()| obj)
-                    })
-            })
     }
 }
 
@@ -132,15 +79,12 @@ pub(super) enum Frame {
 
 #[cfg(test)]
 mod test {
-    use crate::services::MockHost;
-
-    use super::{Details, Frame, Result, Rgb, UncheckedDetails};
+    use super::{Details, Frame, Result, Rgb};
 
     #[test]
     fn deserialize() {
         let json = r#"{"background":[255,0,0],"frame":"White","wish":"Честит рожден ден!","font_type":"Times New Roman","font_size":12,"card_id":10}"#;
-        let unchecked: UncheckedDetails<MockHost> =
-            serde_json::from_str(json).expect("failed to deserialize JSON");
+        let unchecked: Details = serde_json::from_str(json).expect("failed to deserialize JSON");
         let expected = Details::new_unchecked(
             Rgb::new(255, 0, 0),
             Frame::White,
@@ -150,16 +94,7 @@ mod test {
             10,
         );
 
-        assert_eq!(expected, unchecked.into_checked())
-    }
-
-    #[test]
-    fn invalid_card() {
-        let json = r#"{"background":[255,0,0],"frame":"White","wish":"Честит рожден ден!","font_type":"Times New Roman","font_size":12,"card_id":41}"#;
-        let unchecked: UncheckedDetails<MockHost> =
-            serde_json::from_str(json).expect("failed to deserialize JSON");
-
-        assert_err(unchecked.try_into(), "The card number does not exist");
+        assert_eq!(expected, unchecked)
     }
 
     #[test]

@@ -1,12 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-use std::result::Result as StdResult;
-
 use super::{Error, Result};
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Serialize, Deserialize)]
-#[serde(try_from = "UncheckedWaybill")]
+// TODO rename it to "Delivery"
 pub(super) struct Waybill {
     customer_names: String,
     phone_number: String,
@@ -15,7 +13,7 @@ pub(super) struct Waybill {
 }
 
 impl Waybill {
-    pub(super) fn new_unchecked(
+    pub(crate) fn new_unchecked(
         customer_names: String,
         phone_number: String,
         address: String,
@@ -34,7 +32,7 @@ impl Waybill {
     }
 
     // TODO: check address
-    fn invariant_held(&self) -> Result<()> {
+    pub(super) fn check(&self) -> Result<()> {
         check_names(&self.customer_names).and_then(|()| check_phone(&self.phone_number))
     }
 }
@@ -71,37 +69,10 @@ fn check_phone(number: &str) -> Result<()> {
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Serialize, Deserialize)]
+// TODO rename to "Priority"
 pub(super) enum OrderType {
     Standart,
     Express,
-}
-
-#[derive(Deserialize)]
-struct UncheckedWaybill {
-    customer_names: String,
-    phone_number: String,
-    address: String,
-    order_type: OrderType,
-}
-
-impl UncheckedWaybill {
-    fn into_checked(self) -> Waybill {
-        Waybill::new_unchecked(
-            self.customer_names,
-            self.phone_number,
-            self.address,
-            self.order_type,
-        )
-    }
-}
-
-impl TryFrom<UncheckedWaybill> for Waybill {
-    type Error = Error;
-
-    fn try_from(unchecked: UncheckedWaybill) -> StdResult<Self, Self::Error> {
-        let obj = unchecked.into_checked();
-        obj.invariant_held().map(|()| obj)
-    }
 }
 
 #[cfg(test)]
@@ -152,25 +123,13 @@ mod test_invariant {
 
 #[cfg(test)]
 mod test {
-    use super::{OrderType, Result, UncheckedWaybill, Waybill};
+    use super::{OrderType, Waybill};
 
     #[test]
     fn deserialize() {
         let json = r#"{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","order_type":"Standart"}"#;
-        let unchecked: UncheckedWaybill =
-            serde_json::from_str(json).expect("failed to deserialize JSON");
-        assert_eq!(waybill(), unchecked.into_checked())
-    }
-
-    #[test]
-    fn deserialization_err() {
-        let json = r#"{"customer_names":"Тодор Георгиев","phone_number":"+358873528495","address":"Пловдив, ул.Тракия 12","order_type":"Standart"}"#;
-        let unchecked: UncheckedWaybill =
-            serde_json::from_str(json).expect("failed to deserialize JSON");
-        assert_err(
-            unchecked.try_into(),
-            "Phone number must start with 0 or +359",
-        )
+        let unchecked: Waybill = serde_json::from_str(json).expect("failed to deserialize JSON");
+        assert_eq!(waybill(), unchecked)
     }
 
     #[test]
@@ -190,9 +149,5 @@ mod test {
             "Пловдив, ул.Тракия 12".to_string(),
             OrderType::Standart,
         )
-    }
-
-    fn assert_err(r: Result<Waybill>, msg: &str) {
-        assert!(r.expect_err("expected an error").to_string().contains(msg))
     }
 }

@@ -5,10 +5,10 @@ use crate::{
     bindings::ByteArray,
     errors::Error,
     newspaper::{Date, Newspaper, Signature, Year},
-    order::Order,
+    order::{CreateOrder, Order}, Host,
 };
 
-#[cfg_attr(test, derive(Debug, PartialEq))]
+// #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Deserialize)]
 pub enum ExecuteMsg {
     CreateNewspaper {
@@ -21,6 +21,7 @@ pub enum ExecuteMsg {
     SpecifyMaxCards {
         max_number: u8,
     },
+    // TODO use dto::CreateOrder instead of Order
     CreateOrder {
         order: Order,
     },

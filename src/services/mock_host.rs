@@ -75,11 +75,11 @@ impl Storage for MockHost {
         self.store.insert(key.to_string(), value.clone());
     }
 
-    fn retrieve(&mut self, key: &str) -> Option<ByteArray> {
+    fn retrieve(&self, key: &str) -> Option<ByteArray> {
         self.store.get(key).cloned()
     }
 
-    fn retrieve_range(&mut self, _start: &str, _end: &str) -> Vec<ByteArray> {
+    fn retrieve_range(&self, _start: &str, _end: &str) -> Vec<ByteArray> {
         self.store.values().cloned().collect()
     }
 }
