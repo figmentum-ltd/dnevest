@@ -158,35 +158,41 @@ body, html {
 
 <script>
 
-// Your JSON data
-const jsonData = {"NewspapersByDate":{"date":"15-02-1989"}};
+// Define the query parameters
+const queryParams = encodeURIComponent(
+  JSON.stringify({
+    NewspapersByDate: {
+      date: "06-12-2024"
+    }
+  })
+);
 
+// Build the full URL with query parameters
+// Since `url` is a String, it allows us to use formating `${}` to place the value of `queryparams` (also String)
+const url = `https://dnevest.com/query/dnevest?${queryParams}`;
 
 // Set up options for the fetch request
+// No header required (removed)
 const options = {
-  method: "POST",
-  headers: {"Content-Type": "application/json" // Set content type to JSON
-  },
-  body: JSON.stringify(jsonData) // Convert JSON data to a string and set it as the request body
+  method: "GET",
 };
 
-// Make the fetch request with the provided options
-fetch("https://dnevest.com/query/dnevest", options)
+// Make the fetch request
+fetch(url, options)
   .then(response => {
-    // Check if the request was successful
+    // Check if the response was successful
     if (!response.ok) {
-      throw new Error("Network response was not ok");
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
-    // Parse the response as JSON
-    return response.json();
+    return response.json(); // Parse the response as JSON
   })
   .then(data => {
     // Handle the JSON data
-    console.log(data);
+    console.log("Response data:", data);
   })
   .catch(error => {
     // Handle any errors that occurred during the fetch
-    console.error("Fetch error:", error);
+    console.error("Fetch error:", error.message);
   });
 </script>
   
