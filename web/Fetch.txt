@@ -1,0 +1,36 @@
+<h1>JavaScript Fetch API</h1>
+
+<script>
+
+// Your JSON data
+const jsonData = {"NewspapersByDate":{"date":"15-02-1989"}};
+
+
+// Set up options for the fetch request
+const options = {
+  method: "POST",
+  headers: {"Content-Type": "application/json" // Set content type to JSON
+  },
+  body: JSON.stringify(jsonData) // Convert JSON data to a string and set it as the request body
+};
+
+// Make the fetch request with the provided options
+fetch("https://dnevest.com/query/dnevest", options)
+  .then(response => {
+    // Check if the request was successful
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    // Parse the response as JSON
+    return response.json();
+  })
+  .then(data => {
+    // Handle the JSON data
+    console.log(data);
+  })
+  .catch(error => {
+    // Handle any errors that occurred during the fetch
+    console.error("Fetch error:", error);
+  });
+</script>
+  
