@@ -4,19 +4,17 @@ use std::{marker::PhantomData, result::Result as StdResult};
 
 use crate::{Storage, Time};
 
-use super::{
-    delivery::Delivery, wish_card::WishCard, Error, MaxCards, Order, OrderedNewspapers, Result,
-};
+use super::{delivery::Delivery, wish_card::WishCard, Cover, Error, MaxCards, Order, Result};
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Deserialize)]
-pub(crate) struct CreateOrder<S, T>
+pub(crate) struct OrderRequest<S, T>
 where
     S: Storage + Default,
     T: Time + Default,
 {
     details: WishCard,
-    newspapers: OrderedNewspapers,
+    newspapers: Cover,
     waybill: Delivery,
     #[serde(skip)]
     _storage: PhantomData<S>,
@@ -24,14 +22,14 @@ where
     _time: PhantomData<T>,
 }
 
-impl<S, T> TryFrom<CreateOrder<S, T>> for Order
+impl<S, T> TryFrom<OrderRequest<S, T>> for Order
 where
     S: Storage + Default,
     T: Time + Default,
 {
     type Error = Error;
 
-    fn try_from(dto: CreateOrder<S, T>) -> StdResult<Self, Self::Error> {
+    fn try_from(dto: OrderRequest<S, T>) -> StdResult<Self, Self::Error> {
         fetch_max_cards(S::default())
             .and_then(|max_cards| dto.details.check(max_cards))
             .and_then(|()| check_newspapers(&dto.newspapers, S::default()))
@@ -52,7 +50,7 @@ where
         .and_then(|data| serde_json::from_slice(&data).map_err(Error::DeserializationFault))
 }
 
-fn check_newspapers<S>(newspapers: &OrderedNewspapers, storage: S) -> Result<()>
+fn check_newspapers<S>(newspapers: &Cover, storage: S) -> Result<()>
 where
     S: Storage,
 {
@@ -85,9 +83,9 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::order::Signature;
+    // use crate::order::Signature;
 
-    use super::Result;
+    // use super::Result;
 
     // #[test]
     // fn invalid_variant() {
@@ -103,7 +101,7 @@ mod test {
     //     );
     // }
 
-    fn assert_err(r: Result<()>, msg: &str) {
-        assert!(r.expect_err("expected an error").to_string().contains(msg))
-    }
+    // fn assert_err(r: Result<()>, msg: &str) {
+    //     assert!(r.expect_err("expected an error").to_string().contains(msg))
+    // }
 }

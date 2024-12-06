@@ -5,7 +5,7 @@ use crate::{
     bindings::ByteArray,
     errors::Error,
     newspaper::{Date, Newspaper, Signature, Year},
-    order::{CreateOrder, Order},
+    order::{Order, OrderRequest},
     Host,
 };
 
@@ -22,7 +22,7 @@ pub enum ExecuteMsg {
     SpecifyMaxCards {
         max_number: u8,
     },
-    // TODO use dto::CreateOrder instead of Order
+    // TODO use dto::OrderRequest instead of Order
     CreateOrder {
         order: Order,
     },
