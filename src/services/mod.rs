@@ -200,14 +200,14 @@ mod tests {
 
     #[test]
     fn newspaper_not_found() {
-        let mut adapter = MockHost::with_newspapers();
+        let mut adapter = MockHost::default();
         let res = super::define_end_year(&mut adapter, "В1223", 2021);
         assert_err(res, "Newspaper not found");
     }
 
     #[test]
     fn add_max_cards() {
-        let mut adapter = MockHost::with_newspapers();
+        let mut adapter = MockHost::default();
         let res = super::configure_max_cards(&mut adapter, 30);
         assert_eq!(res.unwrap()[0].id, "dnevest_max_card");
 
@@ -218,7 +218,7 @@ mod tests {
 
     #[test]
     fn persist_and_emit_event() {
-        let mut adapter = MockHost::with_newspapers();
+        let mut adapter = MockHost::default();
         let newspaper = Newspaper::new_unchecked(
             "В1612",
             "Труд",

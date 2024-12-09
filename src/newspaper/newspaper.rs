@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     fn newspapers_by_date() {
-        let mut adapter = MockHost::with_newspapers();
+        let mut adapter = MockHost::default();
 
         //05.07.1987 was a sunday
         let publicated_1 = publicized_on(5, 7, 1987, &mut adapter);
