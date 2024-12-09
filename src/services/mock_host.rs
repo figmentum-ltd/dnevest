@@ -15,21 +15,13 @@ use super::Newspaper;
 pub(crate) const CURRENT_YEAR: crate::newspaper::Year = 2024;
 
 #[cfg(test)]
+#[derive(Debug)]
 pub(crate) struct MockHost {
     store: HashMap<String, ByteArray>,
 }
 
 #[cfg(test)]
 impl MockHost {
-    pub(crate) fn with_newspapers() -> Self {
-        let mut host = Self::default();
-        Self::load_newspapers().into_iter().for_each(|newspaper| {
-            let serialized = serde_json::to_vec(&newspaper).expect("Failed to serialize Newspaper");
-            host.persist(newspaper.identificator(), &serialized);
-        });
-        host
-    }
-
     fn load_newspapers() -> Vec<Newspaper> {
         vec![
             Newspaper::new_unchecked(
@@ -65,6 +57,11 @@ impl Default for MockHost {
 
         let max_cards = serde_json::to_vec(&40).expect("Failed to serialize max_cards");
         host.persist("max_cards", &max_cards);
+
+        Self::load_newspapers().into_iter().for_each(|newspaper| {
+            let serialized = serde_json::to_vec(&newspaper).expect("Failed to serialize Newspaper");
+            host.persist(newspaper.identificator(), &serialized);
+        });
         host
     }
 }

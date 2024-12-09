@@ -9,7 +9,7 @@ pub(crate) enum Error {
     DeserializationFault(serde_json::Error),
 
     #[error("[order] {0}.")]
-    NotFound(&'static str),
+    NotFound(String),
 
     #[error("[order] Invalid waybill invariant: {0}")]
     InvalidDelivery(&'static str),

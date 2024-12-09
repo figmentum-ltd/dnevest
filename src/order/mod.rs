@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use error::{Error, Result};
 use wish_card::WishCard;
 
+mod cover;
 mod delivery;
 mod dto;
 mod error;
