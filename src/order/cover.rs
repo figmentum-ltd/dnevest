@@ -14,7 +14,7 @@ pub(super) struct Cover {
 }
 
 impl Cover {
-    fn new_unchecked(preference: Signature, options: [Option<Signature>; 2]) -> Self {
+    pub(super) fn new_unchecked(preference: Signature, options: [Option<Signature>; 2]) -> Self {
         Self {
             preference,
             options,
@@ -89,7 +89,7 @@ mod test {
 
     #[test]
     fn checked_deserialization() {
-        let host = MockHost::default();
+        let _host = MockHost::default();
 
         let json = r#"{"preference":"В1616","options":["В4667",null]}"#;
         let unchecked: UncheckedCover<MockHost> =
