@@ -191,6 +191,8 @@ mod tests {
         services::{MockHost, ServiceError},
     };
 
+    use super::OrderRequest;
+
     #[test]
     fn create_newspaper() {
         let mut adapter = MockHost::default();
@@ -233,6 +235,13 @@ mod tests {
     }
 
     #[test]
+    fn create_order() {
+        let _host = MockHost::default();
+        let res = super::create_order(order());
+        assert_eq!(res.unwrap()[0].id, "dnevest_n_o");
+    }
+
+    #[test]
     fn persist_and_emit_event() {
         let mut adapter = MockHost::default();
         let newspaper = Newspaper::new_unchecked(
@@ -270,6 +279,13 @@ mod tests {
             Some(1996),
             [true, false, false, false, false, false, false],
         )
+    }
+
+    fn order() -> OrderRequest<MockHost, MockHost> {
+        let json = r#"{"wish_card":{"covers":{"preference":"В1616","options":["В4667",null]},"background":[255,0,0],"frame":"White","message":"Честит рожден ден!","font_type":"Times New Roman","font_size":12,"template_id":10},"delivery":{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","priority":"Standart"}}"#;
+        let unchecked: OrderRequest<MockHost, MockHost> =
+            serde_json::from_str(json).expect("failed to deserialize JSON");
+        unchecked
     }
 
     fn assert_err(r: Result<Vec<bindings::Event>, ServiceError>, msg: &str) {
