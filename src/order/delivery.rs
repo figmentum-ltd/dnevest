@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use std::result::Result as StdResult;
+
 use super::{Error, Result};
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
@@ -31,7 +33,7 @@ impl Delivery {
     }
 
     // TODO: check address
-    pub(super) fn check(&self) -> Result<()> {
+    pub(super) fn invariant_held(&self) -> Result<()> {
         check_names(&self.customer_names).and_then(|()| check_phone(&self.phone_number))
     }
 }
@@ -71,6 +73,28 @@ fn check_phone(number: &str) -> Result<()> {
 pub(super) enum Priority {
     Standart,
     Express,
+}
+
+#[derive(Deserialize)]
+pub(super) struct UncheckedDelivery {
+    customer_names: String,
+    phone_number: String,
+    address: String,
+    priority: Priority,
+}
+
+impl TryFrom<UncheckedDelivery> for Delivery {
+    type Error = Error;
+
+    fn try_from(unchecked: UncheckedDelivery) -> StdResult<Self, Self::Error> {
+        let obj = Self::new_unchecked(
+            unchecked.customer_names,
+            unchecked.phone_number,
+            unchecked.address,
+            unchecked.priority,
+        );
+        obj.invariant_held().map(|()| obj)
+    }
 }
 
 #[cfg(test)]
@@ -121,18 +145,27 @@ mod test_invariant {
 
 #[cfg(test)]
 mod test {
-    use super::{Delivery, Priority};
+    use super::{Delivery, Priority, Result, UncheckedDelivery};
 
     #[test]
-    fn deserialize() {
+    fn unchecked_deserialization() {
         let json = r#"{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","priority":"Standart"}"#;
         let unchecked: Delivery = serde_json::from_str(json).expect("failed to deserialize JSON");
-        assert_eq!(waybill(), unchecked)
+        assert_eq!(delivery(), unchecked)
+    }
+
+    #[test]
+    fn checked_deserialization() {
+        let json = r#"{"customer_names":"Тодор Георгиев","phone_number":"+358873528495","address":"Пловдив, ул.Тракия 12","priority":"Standart"}"#;
+        let unchecked: UncheckedDelivery =
+            serde_json::from_str(json).expect("failed to deserialize JSON");
+        let res: Result<Delivery> = unchecked.try_into();
+        assert_err(res, "Phone number must start with 0 or +359")
     }
 
     #[test]
     fn serialize() {
-        let waybill = waybill();
+        let waybill = delivery();
         let serialized = serde_json::to_string(&waybill).expect("failed to serialize");
         assert_eq!(
             serialized,
@@ -140,12 +173,16 @@ mod test {
         )
     }
 
-    fn waybill() -> Delivery {
+    fn delivery() -> Delivery {
         Delivery::new_unchecked(
             "Тодор Георгиев".to_string(),
             "0873528495".to_string(),
             "Пловдив, ул.Тракия 12".to_string(),
             Priority::Standart,
         )
+    }
+
+    fn assert_err(r: Result<Delivery>, msg: &str) {
+        assert!(r.expect_err("expected an error").to_string().contains(msg))
     }
 }
