@@ -31,7 +31,7 @@ impl Guest for Component {
             ExecuteMsg::SpecifyMaxCards { max_number } => {
                 services::specify_max_cards(&mut Host, max_number)
             }
-            ExecuteMsg::CreateOrder { order } => services::create_order(&mut Host, order),
+            ExecuteMsg::CreateOrder { order } => services::create_order(order),
         })
     }
 

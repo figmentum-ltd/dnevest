@@ -5,7 +5,7 @@ use std::result::Result as StdResult;
 use crate::{
     bindings::{self, ByteArray},
     newspaper::{self, Date, Newspaper, Signature, Year},
-    order::{MaxCards, Order},
+    order::{MaxCards, Order, OrderRequest},
     response::Event,
     Storage, Time,
 };
@@ -42,11 +42,14 @@ pub(crate) fn specify_max_cards<A: Storage>(
     self::configure_max_cards(adapter, max_number).map_err(|error| error.serialize())
 }
 
-pub(crate) fn create_order<A: Storage>(
-    adapter: &mut A,
-    order: Order,
-) -> StdResult<Vec<bindings::Event>, ByteArray> {
-    self::place_order(adapter, order).map_err(|error| error.serialize())
+pub(crate) fn create_order<S, T>(
+    order: OrderRequest<S, T>,
+) -> StdResult<Vec<bindings::Event>, ByteArray>
+where
+    S: Storage + Default,
+    T: Time + Default,
+{
+    self::place_order(order).map_err(|error| error.serialize())
 }
 
 pub(crate) fn newspapers_by_date<A: Storage + Time>(
@@ -132,17 +135,30 @@ fn configure_max_cards<A: Storage>(
     }
 }
 
-fn place_order<A: Storage>(
-    adapter: &mut A,
-    order: Order,
-) -> StdResult<Vec<bindings::Event>, ServiceError> {
-    let key = order.identifier();
-    let key = key.as_str();
-    adapter
-        .retrieve(key)
-        .map(|_| Err(ServiceError::DuplicateOrder))
-        .unwrap_or({
-            persist_and_emit_event(adapter, key, &order, "dnevest_n_o", Event::saved_order(key))
+fn place_order<S, T>(order: OrderRequest<S, T>) -> StdResult<Vec<bindings::Event>, ServiceError>
+where
+    S: Storage + Default,
+    T: Time + Default,
+{
+    order
+        .try_into()
+        .map_err(ServiceError::InvalidOrder)
+        .and_then(|order: Order| {
+            let key = order.identifier();
+            let key = key.as_str();
+            let mut storage = S::default();
+            storage
+                .retrieve(key)
+                .map(|_| Err(ServiceError::DuplicateOrder))
+                .unwrap_or({
+                    persist_and_emit_event(
+                        &mut storage,
+                        key,
+                        &order,
+                        "dnevest_n_o",
+                        Event::saved_order(key),
+                    )
+                })
         })
 }
 

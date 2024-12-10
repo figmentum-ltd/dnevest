@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::{bindings::ByteArray, newspaper};
+use crate::{bindings::ByteArray, newspaper, order};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -12,6 +12,9 @@ pub enum Error {
 
     #[error("Newspaper domain error: {0}")]
     DomainError(#[from] newspaper::Error),
+
+    #[error("Order domain error: {0}")]
+    InvalidOrder(#[from] order::Error),
 
     #[error("Problem while deserialization: {0}")]
     DeserializationFault(serde_json::Error),
