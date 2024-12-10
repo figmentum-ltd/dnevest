@@ -121,36 +121,34 @@ curl -k -X POST https://dnevest.com/execute/dnevest \
 ```
 
 ### • Create a new order
-To create a new order, provide the details for the order, the selected newspapers' signatures and the waybill information.
+To create a new order, provide the details for the wish card and the delivery information.
 
 #### Example input
 When specifing the properties, use the following JSON format.
 
-- The `details` contains information about the appearance and content of the order. The `background` must contain a valid RGB value and the `card_id`
+- The `wish_card` contains information about the appearance and content of the order. The `covers` contains the ordered newspapers selected for the order. At least one newspaper must be selected and each signature must correspond to an existing newspaper. The `background` must contain a valid RGB value and the `template_id`
  must be within the maximum allowed value.
-- The `newspapers` contains the ordered newspapers selected for the order. At least one newspaper must be selected and each `signature` must correspond 
-to an existing newspaper.
-- The `waybill` contains details about the customer and and the delivery address. The `customer_names` must include a minimum of 2 names and the `phone_number` 
+- The `delivery` contains details about the customer and and the delivery address. The `customer_names` must include a minimum of 2 names and the `phone_number` 
 must start with "0" or "+359" and contain exactly 9 digits after that.
 
 ```json
 {
   "CreateOrder": {
     "order": {
-      "details": {
+      "wish_card": {
+        "covers": {"preference":"В1616","options":["В4667",null]},
         "background": [134, 24, 29],
         "frame": "White",
-        "wish": "Честит рожден ден!",
+        "message": "Честит рожден ден!",
         "font_type": "Times New Roman",
         "font_size": 12,
-        "card_id": 10
+        "template_id": 10
       },
-      "newspapers": ["В1633", "В1612", null],
-      "waybill": {
+      "delivery": {
         "customer_names": "Тодор Георгиев",
         "phone_number": "0873528495",
         "address": "Пловдив, ул.Тракия 12",
-        "order_type": "Standart"
+        "priority": "Standart"
       }
     }
   }
@@ -161,5 +159,5 @@ must start with "0" or "+359" and contain exactly 9 digits after that.
 ```sh
 curl -k -X POST https://dnevest.com/execute/dnevest \
  	-H "Content-Type: application/json" \
- 	-d '{"CreateOrder":{"order":{"details":{"background":[134,24,29],"frame":"White","wish":"Честит рожден ден!","font_type":"Times New Roman","font_size":12,"card_id":10},"newspapers":["В1633","В1612",null],"waybill":{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","order_type":"Standart"}}}}'
+ 	-d '{"CreateOrder":{"order":{"wish_card":{"covers":{"preference":"В1616","options":["В4667",null]},"background":[134,24,29],"frame":"White","message":"Честит рожден ден!","font_type":"Times New Roman","font_size":12,"template_id":10},"delivery":{"customer_names":"Тодор Георгиев","phone_number":"0873528495","address":"Пловдив, ул.Тракия 12","priority":"Standart"}}}}'
 ```
