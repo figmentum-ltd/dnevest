@@ -23,13 +23,13 @@ struct Component;
 impl Guest for Component {
     fn execute(cmd: ByteArray) -> Result<Vec<bindings::Event>, Vec<u8>> {
         msgs::deserialize_msg(cmd).and_then(|msg| match msg {
-            ExecuteMsg::CreateNewspaper { input } => services::create_newspaper(&mut Host, input),
+            ExecuteMsg::CreateNewspaper { input } => services::create_newspaper::<Host>(input),
             ExecuteMsg::AddFinalYear {
                 signature,
                 final_year,
-            } => services::add_final_year(&mut Host, signature, final_year),
+            } => services::add_final_year::<Host, Host>(signature, final_year),
             ExecuteMsg::SpecifyMaxCards { max_number } => {
-                services::specify_max_cards(&mut Host, max_number)
+                services::specify_max_cards::<Host>(max_number)
             }
             ExecuteMsg::CreateOrder { order } => services::create_order(order),
         })
@@ -37,7 +37,7 @@ impl Guest for Component {
 
     fn query(req: ByteArray) -> Result<ByteArray, ByteArray> {
         msgs::deserialize_msg(req).and_then(|msg| match msg {
-            QueryMsg::NewspapersByDate { date } => services::newspapers_by_date(&mut Host, date),
+            QueryMsg::NewspapersByDate { date } => services::newspapers_by_date::<Host, Host>(date),
         })
     }
 }

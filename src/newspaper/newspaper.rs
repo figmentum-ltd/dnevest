@@ -153,14 +153,15 @@ impl From<Newspaper> for QueryNewspaperDTO {
     }
 }
 
-pub(crate) fn newspapers_by_date<A: Storage + Time>(
-    adapter: &mut A,
-    date: Date,
-) -> Result<ByteArray> {
+pub(crate) fn newspapers_by_date<S, T>(date: Date) -> Result<ByteArray>
+where
+    S: Storage + Default,
+    T: Time + Default,
+{
     let year = date.year();
     let day = (date.day_of_week().number_from_monday() - 1) as usize;
 
-    let published_newspapers: Vec<QueryNewspaperDTO> = adapter
+    let published_newspapers: Vec<QueryNewspaperDTO> = S::default()
         .retrieve_range(
             &signature::SIGN.to_string(),
             &signature::next_letter(signature::SIGN).to_string(),
@@ -169,7 +170,7 @@ pub(crate) fn newspapers_by_date<A: Storage + Time>(
         .filter_map(|ser_newspaper| {
             serde_json::from_slice::<UncheckedNewspaper>(&ser_newspaper)
                 .map_err(Error::DeserializationFault)
-                .and_then(|unchecked| unchecked.into_checked(A::now()))
+                .and_then(|unchecked| unchecked.into_checked(T::now()))
                 .ok()
                 .and_then(|newspaper| newspaper.published_on(day, year).then(|| newspaper.into()))
         })
@@ -185,7 +186,7 @@ mod tests {
     use crate::{
         newspaper::{Date, QueryNewspaperDTO, Year},
         services::MockHost,
-        Storage, Time,
+        Time,
     };
 
     use super::{Error, Newspaper, Result, UncheckedNewspaper};
@@ -228,15 +229,15 @@ mod tests {
 
     #[test]
     fn newspapers_by_date() {
-        let mut adapter = MockHost::default();
+        let _storage = MockHost::default();
 
         //05.07.1987 was a sunday
-        let publicated_1 = publicized_on(5, 7, 1987, &mut adapter);
+        let publicated_1 = publicized_on(5, 7, 1987);
         let expected_1 = vec![QueryNewspaperDTO::new_test("В1612", "Труд")];
         assert_publication_eq(publicated_1, expected_1);
 
         //14.07.1990 was a saturday
-        let publicated_2 = publicized_on(14, 7, 1990, &mut adapter);
+        let publicated_2 = publicized_on(14, 7, 1990);
         let expected_2 = vec![
             QueryNewspaperDTO::new_test("В1612", "Труд"),
             QueryNewspaperDTO::new_test("В4667", "Орбита"),
@@ -275,13 +276,8 @@ mod tests {
         assert_eq!(res.unwrap(), newspaper())
     }
 
-    fn publicized_on<A: Storage + Time>(
-        day: u16,
-        month: u16,
-        year: Year,
-        adapter: &mut A,
-    ) -> Vec<QueryNewspaperDTO> {
-        let res = super::newspapers_by_date(adapter, Date::new(day, month, year))
+    fn publicized_on(day: u16, month: u16, year: Year) -> Vec<QueryNewspaperDTO> {
+        let res = super::newspapers_by_date::<MockHost, MockHost>(Date::new(day, month, year))
             .expect("Failed to retrieve newspapers published on the specified date");
         serde_json::from_slice(&res)
             .expect("Failed to deserialize the published newspapers from the result")
